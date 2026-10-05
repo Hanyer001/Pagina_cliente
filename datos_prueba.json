@@ -1,10 +1,10 @@
 {
   "metadata": {
     "nombre": "Ecosistema I+D+i UAH — datos de prueba",
-    "version": "0.1.0",
-    "fechaGeneracion": "2026-09-26",
+    "version": "0.2.0",
+    "fechaGeneracion": "2026-10-05",
     "datosFicticios": true,
-    "advertencia": "Todos los académicos, proyectos y líneas de financiamiento son inventados para la maqueta. No representan personas ni convocatorias reales.",
+    "advertencia": "Maqueta académica. Todos los perfiles, unidades, reconocimientos, proyectos, socios y convocatorias son ficticios. Los nombres de fondos se utilizan solo como ejemplos; sus estados no corresponden a convocatorias reales.",
     "alcancePiloto": [
       "fac-ing",
       "fac-psi"
@@ -46,7 +46,8 @@
         "hacia": "PalabraClave",
         "dirigido": true
       }
-    }
+    },
+    "criterioAfinidad": "Puntaje de demostración definido en potencialesConexiones, entre 0 y 1. No es una probabilidad ni una evaluación de personas."
   },
   "nodos": {
     "Academico": [
@@ -69,7 +70,8 @@
         ],
         "proyectos": [
           "proy-01",
-          "proy-03"
+          "proy-03",
+          "proy-05"
         ],
         "potencialesConexiones": [
           {
@@ -81,8 +83,8 @@
               "acad-03"
             ],
             "grado": 2,
-            "puntaje": 0.5,
-            "motivo": "Comparten bienestar y tienen 1 colaborador en común"
+            "puntaje": 0.4,
+            "motivo": "1 tema y 1 colaborador en común (datos de prueba)"
           }
         ],
         "coincidenciasFinanciamiento": [
@@ -116,7 +118,35 @@
               "kw-analitica"
             ]
           }
-        ]
+        ],
+        "unidad": "uni-01",
+        "departamento": "Departamento de Ingeniería y Sistemas",
+        "biografia": "Investiga cómo los datos urbanos pueden traducirse en decisiones que mejoren el bienestar de las comunidades. Su trabajo combina analítica, movilidad y metodologías participativas para conectar la ingeniería con los desafíos del territorio.",
+        "formacion": [
+          {
+            "grado": "Doctorado en Ingeniería y Sistemas",
+            "institucion": "Universidad de Estudios Aplicados (ficticia)",
+            "anio": 2014
+          },
+          {
+            "grado": "Ingeniería Civil",
+            "institucion": "Instituto Universitario del Sur (ficticio)",
+            "anio": 2007
+          }
+        ],
+        "reconocimientos": [
+          {
+            "nombre": "Distinción de investigación aplicada",
+            "organismo": "Programa de Innovación UAH (ficticio)",
+            "anio": 2024
+          }
+        ],
+        "docencia": [
+          "Métodos de análisis y diseño de sistemas",
+          "Seminario de investigación aplicada"
+        ],
+        "experienciaTransferencia": "Diseño de prototipos y herramientas de apoyo a decisiones para instituciones públicas.",
+        "disponibilidadColaboracion": "Abierto a colaboración interdisciplinaria"
       },
       {
         "id": "acad-02",
@@ -149,8 +179,8 @@
               "acad-05"
             ],
             "grado": 2,
-            "puntaje": 0.9,
-            "motivo": "Comparten comunidades y tienen 3 colaboradores en común"
+            "puntaje": 0.6000000000000001,
+            "motivo": "1 tema y 3 colaboradores en común (datos de prueba)"
           },
           {
             "academico": "acad-03",
@@ -161,8 +191,8 @@
               "acad-01"
             ],
             "grado": 2,
-            "puntaje": 0.5,
-            "motivo": "Comparten analítica de datos y tienen 1 colaborador en común"
+            "puntaje": 0.4,
+            "motivo": "1 tema y 1 colaborador en común (datos de prueba)"
           }
         ],
         "coincidenciasFinanciamiento": [
@@ -189,7 +219,35 @@
               "kw-analitica"
             ]
           }
-        ]
+        ],
+        "unidad": "uni-01",
+        "departamento": "Departamento de Ingeniería y Sistemas",
+        "biografia": "Estudia la transformación digital de las organizaciones públicas y el diseño de sistemas de información accesibles. Trabaja en modelos de datos que permiten evaluar programas y facilitar la colaboración entre equipos municipales.",
+        "formacion": [
+          {
+            "grado": "Doctorado en Ingeniería y Sistemas",
+            "institucion": "Universidad de Estudios Aplicados (ficticia)",
+            "anio": 2015
+          },
+          {
+            "grado": "Ingeniería Civil",
+            "institucion": "Instituto Universitario del Sur (ficticio)",
+            "anio": 2008
+          }
+        ],
+        "reconocimientos": [
+          {
+            "nombre": "Reconocimiento a la colaboración interdisciplinaria",
+            "organismo": "Programa de Innovación UAH (ficticio)",
+            "anio": 2025
+          }
+        ],
+        "docencia": [
+          "Métodos de análisis y diseño de sistemas",
+          "Seminario de investigación aplicada"
+        ],
+        "experienciaTransferencia": "Diseño de prototipos y herramientas de apoyo a decisiones para instituciones públicas.",
+        "disponibilidadColaboracion": "Abierto a colaboración interdisciplinaria"
       },
       {
         "id": "acad-03",
@@ -209,7 +267,8 @@
           "kw-analitica"
         ],
         "proyectos": [
-          "proy-02"
+          "proy-02",
+          "proy-06"
         ],
         "potencialesConexiones": [
           {
@@ -221,8 +280,8 @@
               "acad-01"
             ],
             "grado": 2,
-            "puntaje": 0.5,
-            "motivo": "Comparten analítica de datos y tienen 1 colaborador en común"
+            "puntaje": 0.4,
+            "motivo": "1 tema y 1 colaborador en común (datos de prueba)"
           }
         ],
         "coincidenciasFinanciamiento": [
@@ -256,7 +315,35 @@
               "kw-analitica"
             ]
           }
-        ]
+        ],
+        "unidad": "uni-02",
+        "departamento": "Departamento de Ingeniería y Sistemas",
+        "biografia": "Desarrolla herramientas de inteligencia artificial para apoyar procesos de aprendizaje. Su interés está en diseñar tecnologías comprensibles y evaluar su utilidad junto a docentes, estudiantes y equipos de investigación.",
+        "formacion": [
+          {
+            "grado": "Doctorado en Ingeniería y Sistemas",
+            "institucion": "Universidad de Estudios Aplicados (ficticia)",
+            "anio": 2016
+          },
+          {
+            "grado": "Ingeniería Civil",
+            "institucion": "Instituto Universitario del Sur (ficticio)",
+            "anio": 2009
+          }
+        ],
+        "reconocimientos": [
+          {
+            "nombre": "Distinción de investigación aplicada",
+            "organismo": "Programa de Innovación UAH (ficticio)",
+            "anio": 2024
+          }
+        ],
+        "docencia": [
+          "Métodos de análisis y diseño de sistemas",
+          "Seminario de investigación aplicada"
+        ],
+        "experienciaTransferencia": "Diseño de prototipos y herramientas de apoyo a decisiones para instituciones públicas.",
+        "disponibilidadColaboracion": "Abierto a colaboración interdisciplinaria"
       },
       {
         "id": "acad-04",
@@ -290,8 +377,8 @@
               "acad-08"
             ],
             "grado": 2,
-            "puntaje": 0.9,
-            "motivo": "Comparten territorio y tienen 3 colaboradores en común"
+            "puntaje": 0.6000000000000001,
+            "motivo": "1 tema y 3 colaboradores en común (datos de prueba)"
           }
         ],
         "coincidenciasFinanciamiento": [
@@ -317,7 +404,35 @@
               "kw-gobdigital"
             ]
           }
-        ]
+        ],
+        "unidad": "uni-01",
+        "departamento": "Departamento de Ingeniería y Sistemas",
+        "biografia": "Investiga modelos de optimización y logística urbana para mejorar el acceso a servicios. Combina simulación, análisis de redes y planificación de recursos con una mirada centrada en las personas.",
+        "formacion": [
+          {
+            "grado": "Doctorado en Ingeniería y Sistemas",
+            "institucion": "Universidad de Estudios Aplicados (ficticia)",
+            "anio": 2017
+          },
+          {
+            "grado": "Ingeniería Civil",
+            "institucion": "Instituto Universitario del Sur (ficticio)",
+            "anio": 2010
+          }
+        ],
+        "reconocimientos": [
+          {
+            "nombre": "Reconocimiento a la colaboración interdisciplinaria",
+            "organismo": "Programa de Innovación UAH (ficticio)",
+            "anio": 2025
+          }
+        ],
+        "docencia": [
+          "Métodos de análisis y diseño de sistemas",
+          "Seminario de investigación aplicada"
+        ],
+        "experienciaTransferencia": "Diseño de prototipos y herramientas de apoyo a decisiones para instituciones públicas.",
+        "disponibilidadColaboracion": "Abierto a colaboración interdisciplinaria"
       },
       {
         "id": "acad-05",
@@ -337,7 +452,8 @@
         ],
         "proyectos": [
           "proy-03",
-          "proy-04"
+          "proy-04",
+          "proy-05"
         ],
         "potencialesConexiones": [
           {
@@ -351,8 +467,8 @@
               "acad-08"
             ],
             "grado": 2,
-            "puntaje": 0.9,
-            "motivo": "Comparten territorio y tienen 3 colaboradores en común"
+            "puntaje": 0.6000000000000001,
+            "motivo": "1 tema y 3 colaboradores en común (datos de prueba)"
           },
           {
             "academico": "acad-06",
@@ -363,8 +479,8 @@
               "acad-07"
             ],
             "grado": 2,
-            "puntaje": 0.5,
-            "motivo": "Comparten bienestar y tienen 1 colaborador en común"
+            "puntaje": 0.4,
+            "motivo": "1 tema y 1 colaborador en común (datos de prueba)"
           }
         ],
         "coincidenciasFinanciamiento": [
@@ -390,7 +506,35 @@
               "kw-comunidades"
             ]
           }
-        ]
+        ],
+        "unidad": "uni-03",
+        "departamento": "Departamento de Psicología",
+        "biografia": "Trabaja en psicología comunitaria y estrategias de intervención territorial. Su investigación busca fortalecer la participación local y convertir el conocimiento de las comunidades en propuestas de acción colectiva.",
+        "formacion": [
+          {
+            "grado": "Doctorado en Psicología",
+            "institucion": "Universidad de Estudios Aplicados (ficticia)",
+            "anio": 2018
+          },
+          {
+            "grado": "Psicología",
+            "institucion": "Instituto Universitario del Sur (ficticio)",
+            "anio": 2011
+          }
+        ],
+        "reconocimientos": [
+          {
+            "nombre": "Distinción de investigación aplicada",
+            "organismo": "Programa de Innovación UAH (ficticio)",
+            "anio": 2024
+          }
+        ],
+        "docencia": [
+          "Métodos de investigación y trabajo comunitario",
+          "Seminario de investigación aplicada"
+        ],
+        "experienciaTransferencia": "Diseño de metodologías participativas y recursos para comunidades educativas y organizaciones sociales.",
+        "disponibilidadColaboracion": "Abierto a colaboración interdisciplinaria"
       },
       {
         "id": "acad-06",
@@ -421,8 +565,8 @@
               "acad-03"
             ],
             "grado": 2,
-            "puntaje": 0.5,
-            "motivo": "Comparten bienestar y tienen 1 colaborador en común"
+            "puntaje": 0.4,
+            "motivo": "1 tema y 1 colaborador en común (datos de prueba)"
           },
           {
             "academico": "acad-05",
@@ -433,8 +577,8 @@
               "acad-07"
             ],
             "grado": 2,
-            "puntaje": 0.5,
-            "motivo": "Comparten bienestar y tienen 1 colaborador en común"
+            "puntaje": 0.4,
+            "motivo": "1 tema y 1 colaborador en común (datos de prueba)"
           }
         ],
         "coincidenciasFinanciamiento": [
@@ -453,7 +597,35 @@
               "kw-infancia"
             ]
           }
-        ]
+        ],
+        "unidad": "uni-03",
+        "departamento": "Departamento de Psicología",
+        "biografia": "Investiga el bienestar digital y la salud mental en contextos educativos. Colabora con especialistas en tecnología para diseñar y evaluar herramientas de acompañamiento psicológico con enfoque preventivo.",
+        "formacion": [
+          {
+            "grado": "Doctorado en Psicología",
+            "institucion": "Universidad de Estudios Aplicados (ficticia)",
+            "anio": 2019
+          },
+          {
+            "grado": "Psicología",
+            "institucion": "Instituto Universitario del Sur (ficticio)",
+            "anio": 2012
+          }
+        ],
+        "reconocimientos": [
+          {
+            "nombre": "Reconocimiento a la colaboración interdisciplinaria",
+            "organismo": "Programa de Innovación UAH (ficticio)",
+            "anio": 2025
+          }
+        ],
+        "docencia": [
+          "Métodos de investigación y trabajo comunitario",
+          "Seminario de investigación aplicada"
+        ],
+        "experienciaTransferencia": "Diseño de metodologías participativas y recursos para comunidades educativas y organizaciones sociales.",
+        "disponibilidadColaboracion": "Abierto a colaboración interdisciplinaria"
       },
       {
         "id": "acad-07",
@@ -473,7 +645,8 @@
         ],
         "proyectos": [
           "proy-02",
-          "proy-04"
+          "proy-04",
+          "proy-06"
         ],
         "potencialesConexiones": [],
         "coincidenciasFinanciamiento": [
@@ -492,7 +665,35 @@
               "kw-migracion"
             ]
           }
-        ]
+        ],
+        "unidad": "uni-02",
+        "departamento": "Departamento de Psicología",
+        "biografia": "Estudia procesos de aprendizaje y experiencias escolares desde la psicología educacional. Su trabajo conecta la evaluación de intervenciones con el diseño de recursos para comunidades educativas diversas.",
+        "formacion": [
+          {
+            "grado": "Doctorado en Psicología",
+            "institucion": "Universidad de Estudios Aplicados (ficticia)",
+            "anio": 2020
+          },
+          {
+            "grado": "Psicología",
+            "institucion": "Instituto Universitario del Sur (ficticio)",
+            "anio": 2013
+          }
+        ],
+        "reconocimientos": [
+          {
+            "nombre": "Distinción de investigación aplicada",
+            "organismo": "Programa de Innovación UAH (ficticio)",
+            "anio": 2024
+          }
+        ],
+        "docencia": [
+          "Métodos de investigación y trabajo comunitario",
+          "Seminario de investigación aplicada"
+        ],
+        "experienciaTransferencia": "Diseño de metodologías participativas y recursos para comunidades educativas y organizaciones sociales.",
+        "disponibilidadColaboracion": "Abierto a colaboración interdisciplinaria"
       },
       {
         "id": "acad-08",
@@ -512,7 +713,9 @@
         ],
         "proyectos": [
           "proy-01",
-          "proy-04"
+          "proy-04",
+          "proy-05",
+          "proy-06"
         ],
         "potencialesConexiones": [
           {
@@ -526,8 +729,8 @@
               "acad-05"
             ],
             "grado": 2,
-            "puntaje": 0.9,
-            "motivo": "Comparten comunidades y tienen 3 colaboradores en común"
+            "puntaje": 0.6000000000000001,
+            "motivo": "1 tema y 3 colaboradores en común (datos de prueba)"
           }
         ],
         "coincidenciasFinanciamiento": [
@@ -547,7 +750,35 @@
               "kw-comunidades"
             ]
           }
-        ]
+        ],
+        "unidad": "uni-04",
+        "departamento": "Departamento de Psicología",
+        "biografia": "Investiga migración, convivencia y vínculos sociales en comunidades y escuelas. Diseña metodologías participativas que permiten identificar necesidades y construir respuestas con organizaciones del territorio.",
+        "formacion": [
+          {
+            "grado": "Doctorado en Psicología",
+            "institucion": "Universidad de Estudios Aplicados (ficticia)",
+            "anio": 2021
+          },
+          {
+            "grado": "Psicología",
+            "institucion": "Instituto Universitario del Sur (ficticio)",
+            "anio": 2014
+          }
+        ],
+        "reconocimientos": [
+          {
+            "nombre": "Reconocimiento a la colaboración interdisciplinaria",
+            "organismo": "Programa de Innovación UAH (ficticio)",
+            "anio": 2025
+          }
+        ],
+        "docencia": [
+          "Métodos de investigación y trabajo comunitario",
+          "Seminario de investigación aplicada"
+        ],
+        "experienciaTransferencia": "Diseño de metodologías participativas y recursos para comunidades educativas y organizaciones sociales.",
+        "disponibilidadColaboracion": "Abierto a colaboración interdisciplinaria"
       }
     ],
     "Proyecto": [
@@ -573,7 +804,41 @@
           "kw-territorio",
           "kw-bienestar"
         ],
-        "resumen": "Integra datos de desplazamientos con indicadores de bienestar comunitario para orientar políticas locales de movilidad."
+        "resumen": "Integra datos de desplazamientos con indicadores de bienestar comunitario para orientar políticas locales de movilidad.",
+        "codigo": "DEMO-UAH-001",
+        "objetivos": [
+          "Identificar brechas territoriales de movilidad a partir de datos y relatos comunitarios.",
+          "Validar un tablero de movilidad con equipos municipales."
+        ],
+        "resultadosEsperados": [
+          "Informe de resultados y recomendaciones",
+          "Prototipo o guía metodológica para actores del territorio"
+        ],
+        "socios": [
+          {
+            "nombre": "Municipio de Villa Encuentro",
+            "tipo": "Gobierno local",
+            "pais": "Chile",
+            "ficticio": true
+          }
+        ],
+        "territorio": "Gobiernos locales · Región Metropolitana",
+        "presupuestoCLP": 65000000,
+        "hitos": [
+          {
+            "anio": 2024,
+            "titulo": "Diseño y levantamiento participativo"
+          },
+          {
+            "anio": 2025,
+            "titulo": "Desarrollo y validación del prototipo"
+          },
+          {
+            "anio": 2027,
+            "titulo": "Resultados y transferencia de aprendizajes"
+          }
+        ],
+        "ultimaActualizacion": "2026-10-05"
       },
       {
         "id": "proy-02",
@@ -597,7 +862,41 @@
           "kw-educacion",
           "kw-infancia"
         ],
-        "resumen": "Prototipo de IA que apoya a equipos de convivencia escolar a identificar señales tempranas de malestar."
+        "resumen": "Prototipo de IA que apoya a equipos de convivencia escolar a identificar señales tempranas de malestar.",
+        "codigo": "DEMO-UAH-002",
+        "objetivos": [
+          "Diseñar un prototipo de acompañamiento digital para comunidades educativas.",
+          "Evaluar su usabilidad con un grupo de participantes de demostración."
+        ],
+        "resultadosEsperados": [
+          "Informe de resultados y recomendaciones",
+          "Prototipo o guía metodológica para actores del territorio"
+        ],
+        "socios": [
+          {
+            "nombre": "Red de Escuelas del Horizonte",
+            "tipo": "Comunidad educativa",
+            "pais": "Chile",
+            "ficticio": true
+          }
+        ],
+        "territorio": "Comunidades educativas · Región Metropolitana",
+        "presupuestoCLP": 77000000,
+        "hitos": [
+          {
+            "anio": 2025,
+            "titulo": "Diseño y levantamiento participativo"
+          },
+          {
+            "anio": 2026,
+            "titulo": "Desarrollo y validación del prototipo"
+          },
+          {
+            "anio": 2027,
+            "titulo": "Resultados y transferencia de aprendizajes"
+          }
+        ],
+        "ultimaActualizacion": "2026-10-05"
       },
       {
         "id": "proy-03",
@@ -620,7 +919,41 @@
           "kw-analitica",
           "kw-comunidades"
         ],
-        "resumen": "Modelo de datos y tablero para que municipios hagan seguimiento de sus programas comunitarios."
+        "resumen": "Modelo de datos y tablero para que municipios hagan seguimiento de sus programas comunitarios.",
+        "codigo": "DEMO-UAH-003",
+        "objetivos": [
+          "Unificar indicadores de programas sociales en un modelo de datos común.",
+          "Diseñar un tablero que facilite el seguimiento de programas municipales."
+        ],
+        "resultadosEsperados": [
+          "Informe de resultados y recomendaciones",
+          "Prototipo o guía metodológica para actores del territorio"
+        ],
+        "socios": [
+          {
+            "nombre": "Municipio de Villa Encuentro",
+            "tipo": "Gobierno local",
+            "pais": "Chile",
+            "ficticio": true
+          }
+        ],
+        "territorio": "Gobiernos locales · Región Metropolitana",
+        "presupuestoCLP": 89000000,
+        "hitos": [
+          {
+            "anio": 2026,
+            "titulo": "Diseño y levantamiento participativo"
+          },
+          {
+            "anio": 2027,
+            "titulo": "Desarrollo y validación del prototipo"
+          },
+          {
+            "anio": 2028,
+            "titulo": "Resultados y transferencia de aprendizajes"
+          }
+        ],
+        "ultimaActualizacion": "2026-10-05"
       },
       {
         "id": "proy-04",
@@ -643,7 +976,155 @@
           "kw-infancia",
           "kw-comunidades"
         ],
-        "resumen": "Estudio mixto sobre trayectorias de aprendizaje de estudiantes migrantes y prácticas de inclusión."
+        "resumen": "Estudio mixto sobre trayectorias de aprendizaje de estudiantes migrantes y prácticas de inclusión.",
+        "codigo": "DEMO-UAH-004",
+        "objetivos": [
+          "Comprender experiencias de convivencia escolar en contextos diversos.",
+          "Proponer recursos metodológicos para escuelas y comunidades."
+        ],
+        "resultadosEsperados": [
+          "Informe de resultados y recomendaciones",
+          "Prototipo o guía metodológica para actores del territorio"
+        ],
+        "socios": [
+          {
+            "nombre": "Red de Escuelas del Horizonte",
+            "tipo": "Comunidad educativa",
+            "pais": "Chile",
+            "ficticio": true
+          }
+        ],
+        "territorio": "Comunidades educativas · Región Metropolitana",
+        "presupuestoCLP": 101000000,
+        "hitos": [
+          {
+            "anio": 2023,
+            "titulo": "Diseño y levantamiento participativo"
+          },
+          {
+            "anio": 2024,
+            "titulo": "Desarrollo y validación del prototipo"
+          },
+          {
+            "anio": 2026,
+            "titulo": "Resultados y transferencia de aprendizajes"
+          }
+        ],
+        "ultimaActualizacion": "2026-10-05"
+      },
+      {
+        "id": "proy-05",
+        "tipo": "Proyecto",
+        "etiqueta": "Territorios que cuidan",
+        "titulo": "Territorios que cuidan: indicadores participativos de bienestar comunitario",
+        "instrumento": "Fondo de Innovación Social (demostración)",
+        "organismo": "Programa Territorial (ficticio)",
+        "anioInicio": 2025,
+        "anioTermino": 2027,
+        "estado": "En ejecución",
+        "visibilidad": "publica",
+        "investigadorResponsable": "acad-05",
+        "facultades": [
+          "fac-ing",
+          "fac-psi"
+        ],
+        "palabrasClave": [
+          "kw-bienestar",
+          "kw-territorio",
+          "kw-analitica"
+        ],
+        "resumen": "Diseña indicadores participativos y un tablero comunitario para reconocer necesidades locales y orientar acciones de cuidado.",
+        "codigo": "DEMO-UAH-005",
+        "objetivos": [
+          "Construir indicadores de bienestar junto a organizaciones comunitarias.",
+          "Probar un tablero de cuidado territorial con equipos locales."
+        ],
+        "resultadosEsperados": [
+          "Informe de resultados y recomendaciones",
+          "Prototipo o guía metodológica para actores del territorio"
+        ],
+        "socios": [
+          {
+            "nombre": "Municipio de Villa Encuentro",
+            "tipo": "Gobierno local",
+            "pais": "Chile",
+            "ficticio": true
+          }
+        ],
+        "territorio": "Gobiernos locales · Región Metropolitana",
+        "presupuestoCLP": 113000000,
+        "hitos": [
+          {
+            "anio": 2025,
+            "titulo": "Diseño y levantamiento participativo"
+          },
+          {
+            "anio": 2026,
+            "titulo": "Desarrollo y validación del prototipo"
+          },
+          {
+            "anio": 2027,
+            "titulo": "Resultados y transferencia de aprendizajes"
+          }
+        ],
+        "ultimaActualizacion": "2026-10-05"
+      },
+      {
+        "id": "proy-06",
+        "tipo": "Proyecto",
+        "etiqueta": "Aulas inclusivas",
+        "titulo": "Aulas inclusivas: laboratorio de experiencias digitales para aprender en comunidad",
+        "instrumento": "Fondo Semilla Interdisciplinario (demostración)",
+        "organismo": "Programa de Investigación Aplicada (ficticio)",
+        "anioInicio": 2026,
+        "anioTermino": 2028,
+        "estado": "En formulación",
+        "visibilidad": "interna",
+        "investigadorResponsable": "acad-03",
+        "facultades": [
+          "fac-ing",
+          "fac-psi"
+        ],
+        "palabrasClave": [
+          "kw-ia",
+          "kw-educacion",
+          "kw-migracion"
+        ],
+        "resumen": "Prototipo de recursos educativos adaptativos para explorar cómo las tecnologías pueden favorecer la participación de estudiantes de distintos contextos.",
+        "codigo": "DEMO-UAH-006",
+        "objetivos": [
+          "Diseñar experiencias de aprendizaje que reconozcan contextos diversos.",
+          "Explorar recursos digitales inclusivos con comunidades educativas."
+        ],
+        "resultadosEsperados": [
+          "Informe de resultados y recomendaciones",
+          "Prototipo o guía metodológica para actores del territorio"
+        ],
+        "socios": [
+          {
+            "nombre": "Red de Escuelas del Horizonte",
+            "tipo": "Comunidad educativa",
+            "pais": "Chile",
+            "ficticio": true
+          }
+        ],
+        "territorio": "Comunidades educativas · Región Metropolitana",
+        "presupuestoCLP": 125000000,
+        "hitos": [
+          {
+            "anio": 2026,
+            "titulo": "Diseño y levantamiento participativo"
+          },
+          {
+            "anio": 2027,
+            "titulo": "Desarrollo y validación del prototipo"
+          },
+          {
+            "anio": 2028,
+            "titulo": "Resultados y transferencia de aprendizajes"
+          }
+        ],
+        "ultimaActualizacion": "2026-10-05"
       }
     ],
     "Facultad": [
@@ -786,6 +1267,55 @@
           "kw-comunidades"
         ],
         "estado": "Convocatoria abierta"
+      }
+    ],
+    "unidades": [
+      {
+        "id": "uni-01",
+        "nombre": "Laboratorio de Datos y Territorio",
+        "tipo": "Laboratorio",
+        "facultad": "fac-ing",
+        "descripcion": "Cruza ciencia de datos, movilidad y necesidades territoriales para diseñar herramientas de apoyo a decisiones públicas.",
+        "palabrasClave": [
+          "kw-analitica",
+          "kw-movilidad",
+          "kw-territorio"
+        ]
+      },
+      {
+        "id": "uni-02",
+        "nombre": "Núcleo de Tecnología y Aprendizaje",
+        "tipo": "Núcleo",
+        "facultad": "fac-ing",
+        "descripcion": "Explora tecnologías de aprendizaje y sistemas de inteligencia artificial con una perspectiva interdisciplinaria.",
+        "palabrasClave": [
+          "kw-ia",
+          "kw-educacion"
+        ]
+      },
+      {
+        "id": "uni-03",
+        "nombre": "Centro de Bienestar y Comunidad",
+        "tipo": "Centro",
+        "facultad": "fac-psi",
+        "descripcion": "Desarrolla metodologías de participación y bienestar para comunidades, escuelas y gobiernos locales.",
+        "palabrasClave": [
+          "kw-bienestar",
+          "kw-saludmental",
+          "kw-comunidades"
+        ]
+      },
+      {
+        "id": "uni-04",
+        "nombre": "Grupo de Convivencia y Migración",
+        "tipo": "Grupo",
+        "facultad": "fac-psi",
+        "descripcion": "Investiga inclusión, vínculos sociales y experiencias educativas en comunidades diversas.",
+        "palabrasClave": [
+          "kw-migracion",
+          "kw-educacion",
+          "kw-territorio"
+        ]
       }
     ]
   },
@@ -970,9 +1500,10 @@
       "source": "acad-01",
       "target": "acad-05",
       "tipo": "COLABORA_CON",
-      "peso": 1,
+      "peso": 2,
       "proyectosCompartidos": [
-        "proy-03"
+        "proy-03",
+        "proy-05"
       ],
       "publicacionesConjuntas": 0,
       "origen": [
@@ -985,9 +1516,10 @@
       "source": "acad-01",
       "target": "acad-08",
       "tipo": "COLABORA_CON",
-      "peso": 1,
+      "peso": 2,
       "proyectosCompartidos": [
-        "proy-01"
+        "proy-01",
+        "proy-05"
       ],
       "publicacionesConjuntas": 0,
       "origen": [
@@ -1043,9 +1575,10 @@
       "source": "acad-03",
       "target": "acad-07",
       "tipo": "COLABORA_CON",
-      "peso": 1,
+      "peso": 2,
       "proyectosCompartidos": [
-        "proy-02"
+        "proy-02",
+        "proy-06"
       ],
       "publicacionesConjuntas": 0,
       "origen": [
@@ -1088,9 +1621,10 @@
       "source": "acad-05",
       "target": "acad-08",
       "tipo": "COLABORA_CON",
-      "peso": 2,
+      "peso": 3,
       "proyectosCompartidos": [
-        "proy-04"
+        "proy-04",
+        "proy-05"
       ],
       "publicacionesConjuntas": 1,
       "origen": [
@@ -1119,9 +1653,10 @@
       "source": "acad-07",
       "target": "acad-08",
       "tipo": "COLABORA_CON",
-      "peso": 1,
+      "peso": 2,
       "proyectosCompartidos": [
-        "proy-04"
+        "proy-04",
+        "proy-06"
       ],
       "publicacionesConjuntas": 0,
       "origen": [
@@ -1290,6 +1825,63 @@
       "source": "acad-08",
       "target": "kw-comunidades",
       "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e-proy-05-acad-05",
+      "source": "acad-05",
+      "target": "proy-05",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Investigador/a responsable"
+    },
+    {
+      "id": "e-proy-05-acad-01",
+      "source": "acad-01",
+      "target": "proy-05",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Coinvestigador/a"
+    },
+    {
+      "id": "e-proy-05-acad-08",
+      "source": "acad-08",
+      "target": "proy-05",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Coinvestigador/a"
+    },
+    {
+      "id": "e-proy-06-acad-03",
+      "source": "acad-03",
+      "target": "proy-06",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Investigador/a responsable"
+    },
+    {
+      "id": "e-proy-06-acad-07",
+      "source": "acad-07",
+      "target": "proy-06",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Coinvestigador/a"
+    },
+    {
+      "id": "e-proy-06-acad-08",
+      "source": "acad-08",
+      "target": "proy-06",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Coinvestigador/a"
+    },
+    {
+      "id": "col-acad-03-acad-08",
+      "source": "acad-03",
+      "target": "acad-08",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [
+        "proy-06"
+      ],
+      "publicacionesConjuntas": 0,
+      "origen": [
+        "proyecto"
+      ],
+      "interfacultad": true
     }
   ]
 }

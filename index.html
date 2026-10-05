@@ -2,642 +2,263 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Maqueta del portal de investigación, desarrollo e innovación de la UAH. Explora perfiles, unidades, proyectos y colaboración.">
   <title>Ecosistema I+D+i UAH</title>
-  <meta name="description" content="Mapa interactivo del ecosistema de investigación, desarrollo e innovación de la UAH.">
-
-  <!-- Bootstrap 5 + íconos (CDN) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;600;700&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* =====================================================================
-       Tokens — paleta institucional
-       ===================================================================== */
-    :root {
-      --marca: #0f2e53;                      /* azul marino institucional */
-      --marca-suave: #e8edf3;
-      --acento: #b08d3a;                     /* dorado sobrio: solo para selección y foco */
-      --ing: #0f2e53;                        /* Facultad de Ingeniería */
-      --psi: #9b2c2c;                        /* Facultad de Psicología (burdeos) */
-      --proy: #2f6b4f;                       /* Proyectos (verde profundo) */
-      --kw: #94a3b8;                         /* Palabras clave */
-      --mapa: #fafafa;                       /* fondo del mapa */
-      --texto: #0f172a;
-      --texto-2: #475569;                    /* gris oscuro para textos secundarios */
-      --linea: #e2e8f0;                      /* bordes finos */
-      --sutil: #f1f5f9;                      /* fondo de botones y tarjetas internas */
-      --sutil-2: #e5eaf0;                    /* hover */
-
-      /* Cristal nítido */
-      --glass-bg: rgba(255, 255, 255, .9);
-      --glass-blur: blur(8px);
-      --glass-border: 1px solid var(--linea);
-      --glass-shadow: 0 4px 12px rgba(0, 0, 0, .08);
-
-      /* Esquinas formales */
-      --r-panel: 6px;
-      --r-ctrl: 4px;
-
-      /* Distribución de los paneles flotantes */
-      --gap: 20px;
-      --panel-top: 96px;
-      --side-w: 300px;
-      --perfil-w: 380px;
-
-      --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      --bs-body-color: var(--texto);
-      --bs-body-bg: var(--mapa);
-      --bs-border-radius: var(--r-ctrl);
+    :root { --marca:#222222; --naranja:#f06427; --psi:#b54215; --ing:#222222; --proy:#36765d; --acento:#b54215; --texto:#252525; --texto-2:#65635f; --linea:#e2ded8; --sutil:#f3f1ec; --glass-bg:rgba(255,255,255,.86); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Rubik,system-ui,sans-serif; color:var(--texto); background:#f8f7f4; font-size:14px; line-height:1.65; }
+    h1,h2 { font-family:'Frank Ruhl Libre',Georgia,serif; color:var(--marca); letter-spacing:-.025em; }
+    h3,h4 { color:var(--marca); }
+    a { color:var(--marca); text-decoration:none; }
+    a:hover { color:var(--psi); text-decoration:underline; }
+    button,input,select { font:inherit; }
+    button { cursor:pointer; }
+    input[type="checkbox"] { accent-color:var(--psi); }
+    [hidden] { display:none !important; }
+    :focus-visible { outline:3px solid var(--acento); outline-offset:4px; }
+    .shell { width:min(1160px,calc(100% - 64px)); margin-inline:auto; }
+    .glass { background:var(--glass-bg); backdrop-filter:blur(14px); border:1px solid rgba(226,222,216,.92); box-shadow:0 6px 25px #22222206; border-radius:12px; }
+    .skip-link { position:fixed; top:-80px; left:16px; background:white; padding:10px; z-index:100; }
+    .skip-link:focus { top:8px; }
+    .masthead { background:var(--marca); border-top:4px solid var(--naranja); color:white; }
+    .masthead-inner { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-block:20px; }
+    .brand { display:flex; align-items:center; gap:14px; color:white; }
+    .brand:hover { color:white; text-decoration:none; }
+    .brand-logo { width:148px; height:auto; display:block; flex:none; }
+    .brand-copy { border-left:1px solid #ffffff40; padding-left:20px; margin-left:6px; }
+    .brand strong { display:block; font-size:16px; font-weight:600; }
+    .brand small { display:block; color:#d9d7d2; font-size:11px; }
+    .view-control { display:flex; align-items:center; gap:10px; font-size:12px; }
+    .view-control .form-check-input { float:none; margin:0; width:2.8em; height:1.4em; cursor:pointer; }
+    .demo { font-size:10px; text-transform:uppercase; letter-spacing:.1em; border:1px solid #ffffff45; border-radius:4px; padding:4px 8px; }
+    .main-nav { background:#fff; border-bottom:1px solid var(--linea); }
+    .nav-inner { display:flex; gap:30px; overflow:auto; }
+    .nav-inner a { padding:14px 0; border-bottom:2px solid transparent; white-space:nowrap; font-size:13px; }
+    .nav-inner a[aria-current="page"] { color:var(--psi); border-color:var(--psi); font-weight:600; }
+    .search-zone { padding:48px 0 40px; text-align:center; background:radial-gradient(ellipse at 85% 15%,#f0642712,transparent 60%),radial-gradient(ellipse at 10% 80%,#ffffffc9,transparent 65%),var(--sutil); border-bottom:1px solid var(--linea); }
+    .eyebrow { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.14em; color:var(--texto-2); }
+    .search-zone h1 { font-size:40px; font-weight:600; margin:10px 0; }
+    .search-zone h1 span { color:var(--naranja); }
+    .search-zone .eyebrow { color:var(--psi); }
+    .search-zone p { color:var(--texto-2); margin:0 0 22px; font-size:13px; }
+    .portal-search { width:min(710px,100%); margin:auto; display:flex; padding:7px; align-items:center; gap:10px; background:var(--glass-bg); backdrop-filter:blur(14px); border:1px solid #d4cfc7; border-radius:10px; box-shadow:0 8px 25px #22222208; }
+    .portal-search > i { color:var(--texto-2); margin-left:12px; }
+    .portal-search input { flex:1; width:0; padding:7px 0; border:0; outline:none; background:none; }
+    .portal-search:focus-within { outline:2px solid var(--acento); outline-offset:2px; }
+    .btn-primary { --bs-btn-active-bg:var(--psi); --bs-btn-active-border-color:var(--psi); background:var(--naranja); border-color:var(--naranja); color:#171717; font-weight:500; border-radius:6px; }
+    .btn-primary:hover { background:var(--psi); border-color:var(--psi); color:white; }
+    .form-check-input:checked { background-color:var(--psi); border-color:var(--psi); }
+    .form-control:focus,.form-select:focus,.form-check-input:focus { border-color:var(--psi); box-shadow:0 0 0 .2rem #f0642726; }
+    .masthead .form-check-input:checked { background-color:var(--naranja); border-color:var(--naranja); }
+    .compact .search-zone { padding:17px 0; }
+    .compact .hero-copy { display:none; }
+    .global-stats { display:grid; grid-template-columns:repeat(var(--total,6),1fr); margin:0; padding:24px 0; gap:0; }
+    .global-stats button { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:0; border:0; background:none; color:var(--marca); padding:4px 10px; min-width:0; }
+    .global-stats button+button { border-left:1px solid var(--linea); }
+    .global-stats button:hover { background:#fff6ef; border-radius:8px; }
+    .global-stats i { display:grid; place-items:center; width:43px; height:43px; font-size:21px; margin-bottom:8px; border-radius:12px; background:#fff2e9; color:var(--psi); }
+    .global-stats strong { font-size:27px; font-weight:500; line-height:1.2; font-variant-numeric:tabular-nums; }
+    .global-stats span { font-size:11px; color:var(--texto-2); margin-top:4px; }
+    .stats-strip { background:#fff; border-bottom:1px solid var(--linea); }
+    main { min-height:50vh; }
+    .page-space { padding-block:32px 50px; }
+    .breadcrumb-line { display:flex; align-items:center; gap:10px; font-size:11px; color:var(--texto-2); margin-bottom:24px; flex-wrap:wrap; }
+    .intro-grid { display:grid; grid-template-columns:1.6fr 1fr; gap:60px; margin:8px 0 36px; }
+    .intro-grid h2 { font-size:30px; margin:0 0 14px; }
+    .intro-grid p { color:var(--texto-2); max-width:650px; }
+    .intro-note { border-left:3px solid var(--naranja); padding:20px 24px; background:linear-gradient(90deg,#fff0e780,transparent); border-radius:0 12px 12px 0; }
+    .intro-note h3 { font-size:15px; margin:0 0 8px; }
+    .intro-note p { font-size:12px; margin:0 0 12px; }
+    .section-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; margin:24px 0 16px; }
+    .section-heading h2 { font-size:25px; margin:0; }
+    .section-heading a { font-size:12px; }
+    .researcher-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+    .researcher-card { padding:20px; transition:box-shadow .18s,border-color .18s; }
+    .researcher-card:hover { border-color:#d8a88c; box-shadow:0 6px 22px #2222220d; }
+    .avatar { display:grid; place-items:center; flex:none; background:#efede8; color:var(--marca); border:1px solid #e0dcd5; font-family:'Frank Ruhl Libre',Georgia,serif; font-size:22px; width:60px; height:64px; border-radius:5px; }
+    .avatar.psi { background:#fff0e7; color:var(--psi); border-color:#f2d3c0; }
+    .researcher-card h3 { font-size:14px; line-height:1.5; margin:14px 0 4px; }
+    .muted { color:var(--texto-2); }
+    .meta { font-size:11px; color:var(--texto-2); }
+    .chips { display:flex; gap:6px; flex-wrap:wrap; }
+    .chip { display:inline-flex; align-items:center; background:#f0ede7; color:#4f4b45; padding:4px 9px; border:0; border-radius:4px; font-size:11px; line-height:1.6; }
+    button.chip:hover { background:#e6e0d6; }
+    .card-foot { border-top:1px solid var(--linea); padding-top:12px; margin-top:18px; display:flex; justify-content:space-between; gap:12px; font-size:11px; color:var(--texto-2); }
+    .faculty-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+    .faculty-card { padding:22px; border-top:3px solid var(--marca); }
+    .faculty-card.psi { border-top-color:var(--psi); }
+    .faculty-card h3 { font-size:16px; }
+    .directory-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; }
+    .directory-heading h1 { font-size:32px; margin:0; }
+    .directory-layout { display:grid; grid-template-columns:230px minmax(0,1fr); gap:32px; }
+    .filters { padding:20px; align-self:start; }
+    .filters h2 { font:600 14px Rubik,sans-serif; margin:0 0 20px; }
+    .filters label { display:block; font-size:11px; font-weight:600; margin:16px 0 7px; }
+    .filters select { font-size:12px; }
+    .result-toolbar { display:flex; justify-content:space-between; gap:16px; align-items:center; border-bottom:1px solid var(--linea); padding-bottom:13px; margin-bottom:18px; }
+    .result-toolbar select { width:auto; font-size:11px; }
+    .result-list { display:grid; gap:14px; }
+    .result-person { display:flex; gap:20px; padding:24px; }
+    .result-person h2 { font:600 18px Rubik,sans-serif; margin:0 0 4px; }
+    .result-person p { font-size:12px; margin:8px 0 12px; }
+    .result-person .avatar { width:80px; height:90px; font-size:28px; }
+    .profile-identity > * { min-width:0; }
+    .profile-identity { display:grid; grid-template-columns:160px minmax(0,1fr) 250px; gap:32px; padding:8px 0 30px; align-items:start; }
+    .profile-identity .avatar { width:160px; height:185px; font-size:62px; border-radius:4px; background:linear-gradient(135deg,#faf9f6,#ddd8ce); }
+    .profile-identity .avatar.psi { background:linear-gradient(135deg,#fffaf5,#f8d7bf); }
+    .profile-identity h1 { font-size:34px; line-height:1.22; margin:4px 0 8px; }
+    .affiliation { display:flex; flex-direction:column; gap:2px; margin:12px 0; font-size:12px; }
+    .affiliation a { color:var(--psi); }
+    .demo-label { display:inline-flex; align-items:center; gap:5px; font-size:10px; color:var(--texto-2); padding:4px 8px; background:#f0ede7; border-radius:4px; }
+    .profile-metrics { border-left:1px solid var(--linea); padding-left:26px; }
+    .metric-row { display:flex; gap:20px; border-bottom:1px solid var(--linea); padding:10px 0 18px; margin:8px 0 14px; }
+    .metric-row strong { display:block; color:var(--marca); font-size:28px; line-height:1.2; font-weight:500; }
+    .metric-row span { font-size:10px; color:var(--texto-2); }
+    .year-chart { display:flex; height:64px; gap:7px; align-items:end; margin-top:18px; }
+    .year-column { flex:1; min-width:0; text-align:center; font-size:9px; color:var(--texto-2); }
+    .year-bar { background:#b5aaa0; width:100%; min-height:2px; display:block; margin-bottom:5px; }
+    .profile-tabs { display:flex; border-block:1px solid var(--linea); gap:30px; margin-bottom:30px; overflow:auto; }
+    .profile-tabs button { padding:16px 0 13px; border:0; border-bottom:3px solid transparent; background:none; color:var(--texto-2); font-size:12px; white-space:nowrap; }
+    .profile-tabs button[aria-selected="true"] { color:var(--psi); border-color:var(--psi); font-weight:600; }
+    .profile-tabs i { margin-right:6px; }
+    .panel-grid { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(240px,1fr); gap:40px; }
+    .content-block { margin-bottom:30px; }
+    .content-block h2 { font-size:26px; margin:0 0 18px; }
+    .content-block h3 { font-size:13px; font-weight:600; margin:20px 0 8px; }
+    .content-block p { color:var(--texto-2); font-size:13px; }
+    .inset-card { padding:24px; }
+    .simple-list { padding-left:18px; color:var(--texto-2); font-size:12px; }
+    .timeline-item { border-left:2px solid #ded7ce; padding:0 0 18px 17px; font-size:12px; }
+    .timeline-item strong { display:block; }
+    .section-label { text-transform:uppercase; letter-spacing:.12em; font-size:10px; font-weight:600; color:var(--texto-2); margin-bottom:12px; }
+    .network-layout { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(270px,1fr); gap:24px; }
+    .network-frame { padding:16px; align-self:start; }
+    .network-toolbar { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; padding-bottom:10px; font-size:11px; }
+    .network-toolbar label { display:inline-flex; align-items:center; gap:6px; margin-right:12px; }
+    .network-controls { display:flex; gap:5px; }
+    .network-controls button { border:1px solid var(--linea); background:white; border-radius:4px; width:30px; height:30px; color:var(--marca); }
+    .network-canvas { height:425px; background:radial-gradient(#e1ddd6 .75px,transparent .75px); background-size:18px 18px; border:1px solid var(--linea); border-radius:5px; position:relative; }
+    .network-canvas:focus-visible { outline:3px solid var(--acento); }
+    .network-legend { display:flex; flex-wrap:wrap; gap:14px; padding-top:13px; font-size:10px; color:var(--texto-2); }
+    .network-legend span { display:inline-flex; align-items:center; gap:5px; }
+    .dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--marca); }
+    .dot.psi { background:var(--psi); } .dot.project { background:var(--proy); border-radius:1px; }
+    .dash { display:inline-block; width:18px; border-top:2px dashed var(--naranja); }
+    .connection-list { display:grid; gap:10px; }
+    .connection-card { padding:16px; text-align:left; color:inherit; }
+    .connection-card:hover { border-color:#b5aaa0; }
+    .connection-head { display:flex; gap:12px; align-items:center; }
+    .connection-head .avatar { width:42px; height:44px; font-size:17px; }
+    .connection-head strong { display:block; font-size:12px; }
+    .connection-card p { font-size:11px; margin:10px 0 0; color:var(--texto-2); }
+    .affinity { height:5px; border-radius:3px; background:#ece5db; margin:8px 0; }
+    .affinity div { height:100%; border-radius:3px; background:var(--acento); }
+    .potential-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+    .project-summary { display:flex; gap:12px; flex-wrap:wrap; margin:16px 0 24px; }
+    .status-chip { font-size:10px; background:#e8f1ed; color:#285740; padding:4px 8px; border-radius:3px; }
+    .status-chip.formulation { background:#f4efdf; color:#765e26; }
+    .status-chip.finished { background:#edf0f3; color:#576775; }
+    .project-card { padding:24px; border-left:3px solid var(--proy); }
+    .project-card h2,.project-card h3 { font:600 17px/1.5 Rubik,sans-serif; margin:12px 0 6px; }
+    .project-card p { font-size:12px; color:var(--texto-2); margin:8px 0 14px; }
+    .project-card .project-meta { display:flex; flex-wrap:wrap; gap:8px 20px; font-size:11px; color:var(--texto-2); margin:10px 0; }
+    .project-card details { font-size:12px; border-top:1px solid var(--linea); padding-top:12px; margin-top:16px; }
+    .project-card summary { color:var(--marca); cursor:pointer; }
+    .empty-state { text-align:center; padding:45px 20px; color:var(--texto-2); }
+    .empty-state i { font-size:30px; display:block; margin-bottom:12px; }
+    .empty-state h2 { font-size:22px; }
+    .notice { font-size:12px; color:var(--texto-2); background:#f7eee5; border-left:3px solid var(--acento); padding:14px 18px; margin-bottom:20px; }
+    .fund-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .unit-card { padding:24px; }
+    .unit-card h2 { font:600 18px/1.5 Rubik,sans-serif; }
+    .footer { border-top:1px solid var(--linea); background:#f0ede7; padding:25px 0; color:var(--texto-2); font-size:11px; }
+    .footer-inner { display:flex; justify-content:space-between; gap:30px; }
+    .footer p { margin:0; max-width:630px; }
+    .loading { padding:70px 0; text-align:center; color:var(--texto-2); }
+    .vis-tooltip { font-family:Rubik,sans-serif !important; font-size:11px !important; max-width:280px; white-space:normal !important; }
+    @media(max-width:991px) {
+      .shell { width:calc(100% - 40px); }
+      .researcher-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .profile-identity { grid-template-columns:120px minmax(0,1fr); gap:22px; }
+      .profile-identity .avatar { width:120px; height:145px; font-size:48px; }
+      .profile-metrics { grid-column:2; border:0; padding:0; display:block; }
+      .profile-metrics .year-chart { width:100%; margin-top:18px; }
+      .metric-row { border:0; margin:0; padding:0; }
+      .profile-identity h1 { font-size:30px; }
+      .network-layout,.panel-grid { grid-template-columns:1fr; }
+      .network-layout > aside .connection-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .intro-grid { gap:30px; }
+      .potential-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .global-stats span { font-size:10px; }
+      .directory-layout { grid-template-columns:190px minmax(0,1fr); gap:20px; }
     }
-
-    html, body { height: 100%; }
-    body {
-      background: var(--mapa);
-      overflow: hidden;
-      font-size: 15px;
-      -webkit-font-smoothing: antialiased;
-      font-feature-settings: "tnum" 1;      /* cifras tabulares para contadores */
+    @media(max-width:600px) {
+      .shell { width:calc(100% - 32px); }
+      .masthead-inner { gap:12px; padding-block:16px; }
+      .brand { gap:9px; } .brand strong { font-size:12px; } .brand small { font-size:9px; }
+      .brand-logo { width:93px; } .brand-copy { padding-left:10px; margin-left:0; } .masthead .demo { display:none; }
+      .view-control { font-size:10px; gap:6px; } .view-control .form-check-input { width:2.4em; }
+      .nav-inner { gap:22px; } .nav-inner a { font-size:11px; }
+      .search-zone { padding:30px 0 24px; } .search-zone h1 { font-size:29px; } .search-zone p { font-size:12px; }
+      .portal-search { gap:7px; } .portal-search input { font-size:12px; } .portal-search button { font-size:11px; }
+      .global-stats { grid-template-columns:repeat(3,1fr); gap:18px 0; padding-block:22px; }
+      .global-stats button:nth-child(4) { border-left:0; } .global-stats strong { font-size:24px; }
+      .intro-grid,.faculty-grid,.directory-layout,.fund-grid,.potential-grid { grid-template-columns:1fr; }
+      .intro-grid { gap:12px; } .intro-grid h2 { font-size:26px; }
+      .researcher-grid { grid-template-columns:1fr; } .researcher-card { padding:20px; }
+      .filters { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 12px; }
+      .filters h2 { grid-column:1/-1; margin-bottom:0; }
+      .directory-heading h1 { font-size:28px; }
+      .result-person { gap:14px; padding:18px; } .result-person .avatar { width:50px; height:60px; font-size:20px; }
+      .result-person h2 { font-size:15px; }
+      .profile-identity { grid-template-columns:80px minmax(0,1fr); gap:16px; }
+      .profile-identity .avatar { width:80px; height:100px; font-size:32px; }
+      .profile-identity h1 { font-size:26px; }
+      .profile-metrics { grid-column:1/-1; display:block; }
+      .profile-metrics .metric-row { justify-content:flex-start; gap:30px; }
+      .profile-metrics .year-chart { width:100%; margin-top:18px; }
+      .profile-tabs { gap:24px; } .profile-tabs button { font-size:11px; }
+      .network-canvas { height:350px; }
+      .network-layout > aside .connection-list { grid-template-columns:1fr; }
+      .network-frame { padding:12px; }
+      .section-heading h2 { font-size:23px; } .section-heading { align-items:start; }
+      .footer-inner { flex-direction:column; gap:12px; }
     }
-    :focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
-
-    /* Panel de cristal reutilizable */
-    .glass {
-      background: var(--glass-bg);
-      -webkit-backdrop-filter: var(--glass-blur);
-      backdrop-filter: var(--glass-blur);
-      border: var(--glass-border);
-      border-radius: var(--r-panel);
-      box-shadow: var(--glass-shadow);
-    }
-
-    /* Rótulo de sección (sidebar y ficha): mayúsculas sostenidas con filete inferior */
-    .side-label,
-    .p-section h3 {
-      font-size: .74rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
-      color: var(--texto);
-      padding-bottom: .55rem; margin-bottom: .85rem;
-      border-bottom: 1px solid var(--linea);
-    }
-
-    /* =====================================================================
-       1. Mapa a pantalla completa
-       ===================================================================== */
-    #network-graph {
-      position: fixed; inset: 0;
-      width: 100vw; height: 100vh; height: 100dvh;
-      z-index: 0;
-      background: var(--mapa);
-    }
-    #network-graph .vis-network:focus { outline: none; }
-
-    .graph-placeholder {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      text-align: center; padding: 2rem; color: var(--texto-2);
-    }
-    .graph-placeholder svg { width: min(300px, 60vw); height: auto; margin-bottom: 1.25rem; }
-    .graph-placeholder .ph-title { font-weight: 600; color: var(--texto); font-size: 1.05rem; }
-    .graph-placeholder .ph-sub { font-size: .88rem; max-width: 42ch; }
-
-    body div.vis-tooltip {
-      font-family: var(--bs-body-font-family) !important; font-size: .8rem !important; color: var(--texto) !important;
-      background: #fff !important; border: 1px solid var(--linea) !important; border-radius: var(--r-ctrl) !important;
-      box-shadow: var(--glass-shadow) !important; padding: .55rem .7rem !important;
-      white-space: pre-line !important; max-width: 280px; line-height: 1.45;
-    }
-
-    /* =====================================================================
-       2. Barra superior
-       ===================================================================== */
-    .topbar-wrap {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 10;
-      padding: 0 var(--gap);
-      pointer-events: none;
-    }
-    .topbar-pill {
-      pointer-events: auto;
-      margin: 20px auto;
-      max-width: 900px;
-      padding: .5rem .6rem .5rem .6rem;
-      display: flex; align-items: center; gap: .75rem;
-    }
-    .brand { color: var(--texto); text-decoration: none; font-weight: 700; letter-spacing: -.005em; white-space: nowrap; line-height: 1.15; font-size: .98rem; }
-    .brand:hover { color: var(--texto); }
-    .brand-mark {
-      width: 36px; height: 36px; border-radius: var(--r-ctrl);
-      display: inline-grid; place-items: center; flex: none;
-      background: var(--marca); color: #fff; font-size: 1rem;
-    }
-    .brand small {
-      display: block; font-weight: 600; font-size: .64rem; color: var(--texto-2);
-      text-transform: uppercase; letter-spacing: .05em; margin-top: .1rem;
-    }
-    .brand-sep { width: 1px; align-self: stretch; background: var(--linea); margin: .15rem 0; }
-
-    .search-wrap { flex: 1 1 auto; min-width: 0; }
-    .search-wrap .input-group {
-      background: var(--sutil); border: 1px solid transparent; border-radius: var(--r-ctrl);
-      overflow: hidden; transition: background .15s, border-color .15s;
-    }
-    .search-wrap .input-group:focus-within { background: #fff; border-color: var(--marca); }
-    .search-wrap .input-group-text, .search-wrap .form-control { background: transparent; border: 0; border-radius: 0; }
-    .search-wrap .input-group-text { color: var(--texto-2); padding-left: .8rem; }
-    .search-wrap .form-control { padding: .5rem .8rem .5rem .2rem; font-size: .9rem; color: var(--texto); }
-    .search-wrap .form-control::placeholder { color: #64748b; }
-    .search-wrap .form-control:focus { box-shadow: none; }
-    .search-wrap .form-control.is-invalid { background-image: none; color: #9b2c2c; }
-    .search-wrap .input-group:has(.is-invalid) { border-color: #9b2c2c; }
-
-    .view-toggle {
-      display: flex; align-items: center; gap: .6rem; flex: none;
-      background: var(--sutil); border-radius: var(--r-ctrl);
-      padding: .35rem .8rem .35rem .6rem; white-space: nowrap;
-      transition: background .2s;
-    }
-    .view-toggle.form-switch { padding-left: .6rem; margin-bottom: 0; min-height: 0; }
-    .view-toggle label { cursor: pointer; color: var(--texto); }
-    .view-toggle .form-check-input {
-      width: 2.4em; height: 1.3em; margin: 0; float: none; cursor: pointer;
-      border-radius: 3px !important; border: 0;
-      background-color: #94a3b8;
-      --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3crect x='-2.6' y='-2.6' width='5.2' height='5.2' rx='.6' fill='%23fff'/%3e%3c/svg%3e");
-    }
-    .view-toggle .form-check-input:checked { background-color: var(--marca); }
-    .view-toggle .form-check-input:focus {
-      box-shadow: 0 0 0 2px rgba(176, 141, 58, .45);
-      --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3crect x='-2.6' y='-2.6' width='5.2' height='5.2' rx='.6' fill='%23fff'/%3e%3c/svg%3e");
-    }
-    .vt-title { font-weight: 600; font-size: .84rem; line-height: 1.1; }
-    .vt-sub { font-size: .66rem; color: var(--texto-2); line-height: 1.1; text-transform: uppercase; letter-spacing: .05em; margin-top: .12rem; }
-    body.vista-externa .view-toggle { background: #f6eaea; }
-    body.vista-externa .vt-sub { color: var(--psi); }
-
-    .btn-ghost { background: var(--sutil); border: 0; color: var(--texto); border-radius: var(--r-ctrl); width: 36px; height: 36px; padding: 0; display: inline-grid; place-items: center; flex: none; }
-    .btn-ghost:hover { background: var(--sutil-2); color: var(--texto); }
-
-    /* =====================================================================
-       3. Sidebar de categorías
-       ===================================================================== */
-    #sidebar.glass { background: var(--glass-bg) !important; }
-    #sidebar .offcanvas-body { overflow-y: auto; }
-    .side-section { padding: 1.25rem 1.25rem .35rem; }
-    .side-label a { color: var(--texto-2); font-size: .72rem; letter-spacing: .02em; text-transform: none; font-weight: 500; text-decoration: underline; text-underline-offset: 2px; }
-    .side-label a:hover { color: var(--marca); }
-
-    .fac-btn {
-      display: flex; align-items: center; gap: .6rem; width: 100%;
-      border: 0; background: transparent; color: var(--texto);
-      border-radius: var(--r-ctrl); padding: .6rem .75rem; margin-bottom: .25rem;
-      font-weight: 500; font-size: .9rem; text-align: left; cursor: pointer;
-      box-shadow: inset 3px 0 0 transparent;
-      transition: background .15s, box-shadow .15s;
-    }
-    .fac-btn:hover { background: var(--sutil); }
-    .fac-btn .dot { width: 9px; height: 9px; border-radius: 2px; flex: none; }
-    .fac-btn .count { margin-left: auto; font-size: .76rem; color: var(--texto-2); font-weight: 600; }
-    .btn-check:checked + .fac-btn { background: var(--marca-suave); color: var(--marca); font-weight: 600; box-shadow: inset 3px 0 0 var(--marca); }
-    .btn-check:checked + .fac-btn .count { color: var(--marca); }
-    .btn-check:focus-visible + .fac-btn { outline: 2px solid var(--acento); outline-offset: 1px; }
-
-    .kw-list { display: flex; flex-wrap: wrap; gap: .35rem; }
-    .kw-btn {
-      border: 0; background: var(--sutil); color: var(--texto); cursor: pointer;
-      border-radius: var(--r-ctrl); padding: .32rem .6rem; font-size: .79rem; font-weight: 500;
-      transition: background .15s, color .15s;
-    }
-    .kw-btn:hover { background: var(--sutil-2); }
-    .kw-btn .n { color: var(--texto-2); font-size: .7rem; margin-left: .25rem; font-weight: 600; }
-    .btn-check:checked + .kw-btn { background: var(--marca); color: #fff; }
-    .btn-check:checked + .kw-btn .n { color: rgba(255, 255, 255, .75); }
-    .btn-check:focus-visible + .kw-btn { outline: 2px solid var(--acento); outline-offset: 1px; }
-    .demo-flag {
-      font-size: .64rem; background: #f4efe2; color: #6b5316; border-radius: 3px; padding: .15rem .4rem;
-      font-weight: 700; white-space: nowrap; text-transform: uppercase; letter-spacing: .05em;
-    }
-    #sidebar .small { color: var(--texto-2) !important; line-height: 1.55; }
-
-    /* =====================================================================
-       4. Ficha del académico
-       ===================================================================== */
-    #perfil { overflow-y: auto; overscroll-behavior: contain; }
-    .profile { padding: 1.25rem 1.35rem 1.5rem; }
-    .profile > .d-flex:first-child .side-label { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; color: var(--texto-2); }
-    .profile .btn-light { background: var(--sutil); border: 0; border-radius: var(--r-ctrl); width: 32px; height: 32px; padding: 0; }
-    .profile .btn-light:hover { background: var(--sutil-2); }
-    .profile-head { display: flex; gap: 1rem; align-items: center; padding-bottom: 1.1rem; border-bottom: 1px solid var(--linea); }
-    .avatar {
-      width: 56px; height: 56px; border-radius: var(--r-ctrl) !important; flex: none; border: 0 !important;
-      display: grid; place-items: center; font-weight: 700; font-size: 1.05rem; letter-spacing: .02em;
-      background: var(--marca-suave); color: var(--ing);
-    }
-    .profile-head h2 { font-size: 1.12rem; font-weight: 700; margin: 0 0 .1rem; letter-spacing: -.01em; color: var(--texto); }
-    .profile-head .role { font-size: .84rem; color: var(--texto-2); }
-    .fac-badge {
-      background: var(--marca-suave); color: var(--ing); font-weight: 600; font-size: .68rem;
-      border-radius: 3px; padding: .2rem .5rem; display: inline-flex; align-items: center; gap: .3rem;
-      text-transform: uppercase; letter-spacing: .04em;
-    }
-    .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-top: 1rem; border: 1px solid var(--linea); border-radius: var(--r-ctrl); }
-    .stat { padding: .65rem .35rem; text-align: center; min-width: 0; }
-    .stat + .stat { border-left: 1px solid var(--linea); }
-    .stat b { display: block; font-size: 1.2rem; line-height: 1.2; color: var(--marca); }
-    .stat span { font-size: .66rem; color: var(--texto-2); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
-
-    .p-section { margin-top: 1.6rem; }
-    .p-section h3 { display: flex; align-items: center; gap: .5rem; }
-    .p-section h3 .bi { font-size: .9rem; color: var(--marca); }
-    .tag-int {
-      margin-left: auto; font-size: .6rem; letter-spacing: .06em; text-transform: uppercase;
-      background: #f4efe2; color: #6b5316; border-radius: 3px; padding: .12rem .4rem; font-weight: 700; white-space: nowrap;
-    }
-    .line-item { display: flex; align-items: center; gap: .35rem; font-size: .92rem; margin-bottom: .15rem; color: var(--texto); }
-    .line-item .bi { color: var(--ing); }
-    .chip { display: inline-block; background: var(--sutil); color: var(--texto); border-radius: 3px; padding: .28rem .55rem; font-size: .78rem; margin: 0 .3rem .4rem 0; }
-
-    .conn { border: 0; background: var(--sutil); border-radius: var(--r-ctrl); padding: .85rem; display: flex; gap: .75rem; color: inherit; }
-    button.conn { cursor: pointer; transition: background .15s, box-shadow .15s; box-shadow: inset 3px 0 0 transparent; }
-    button.conn:hover { background: var(--sutil-2); box-shadow: inset 3px 0 0 var(--acento); }
-    .conn .avatar { width: 40px; height: 40px; font-size: .8rem; background: #f6eaea; color: var(--psi); }
-    .conn-name { font-weight: 600; font-size: .9rem; color: var(--texto); }
-    .conn-meta { font-size: .76rem; color: var(--texto-2); }
-    .path { display: flex; align-items: center; gap: .3rem; font-size: .73rem; color: var(--texto-2); margin-top: .5rem; flex-wrap: wrap; }
-    .path .node { background: #fff; border-radius: 3px; padding: .1rem .4rem; color: var(--texto); }
-    .conn .chip { background: #fff; }
-    .affinity { height: 4px; border-radius: 2px; background: #dfe5ec; margin-top: .5rem; }
-    .affinity > div { height: 100%; border-radius: 2px; background: var(--marca); }
-
-    .fund { border: 0 !important; border-radius: var(--r-ctrl); padding: .8rem .85rem; margin-bottom: .45rem; background: var(--sutil); }
-    .fund-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
-    .fund-name { font-weight: 600; font-size: .88rem; line-height: 1.3; color: var(--texto); }
-    .fund-inst { font-size: .75rem; color: var(--texto-2); margin-top: .15rem; }
-    .lvl { font-size: .6rem; font-weight: 700; border-radius: 3px; padding: .18rem .45rem; white-space: nowrap; text-transform: uppercase; letter-spacing: .06em; }
-    .lvl.alta { background: #e3eee8; color: var(--proy); }
-    .lvl.media { background: #f4efe2; color: #6b5316; }
-    .fund-foot { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .5rem; flex-wrap: wrap; }
-    .fund-foot .kws { font-size: .74rem; color: var(--texto); }
-    .state { font-size: .71rem; display: inline-flex; align-items: center; gap: .3rem; color: var(--texto-2); }
-    .state .d { width: 7px; height: 7px; border-radius: 1px; }
-
-    .public-note { display: none; }
-    .public-note .alert { background: var(--sutil); border: 0; border-radius: var(--r-ctrl); color: var(--texto); box-shadow: inset 3px 0 0 var(--marca); }
-
-    body.vista-externa .solo-interna { display: none !important; }
-    body.vista-externa .public-note { display: block; }
-
-    /* =====================================================================
-       5. Controles sobre el mapa
-       ===================================================================== */
-    .map-info { position: fixed; z-index: 10; padding: .7rem .9rem; font-size: .75rem; color: var(--texto-2); }
-    .map-info .mi-title { font-weight: 700; font-size: .72rem; margin-right: .6rem; color: var(--texto); text-transform: uppercase; letter-spacing: .05em; }
-    .map-info .meta { color: var(--texto-2); }
-    .legend { display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin-top: .5rem; padding-top: .5rem; border-top: 1px solid var(--linea); color: var(--texto); }
-    .legend span { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
-    .lg-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-    .lg-sq { width: 9px; height: 9px; border-radius: 1px; display: inline-block; }
-    .lg-line { width: 18px; height: 0; border-top: 1.5px dashed var(--marca); display: inline-block; opacity: .7; }
-
-    .map-tools { position: fixed; z-index: 10; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
-    .map-tools .btn { width: 36px; height: 36px; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--texto); }
-    .map-tools .btn + .btn { border-top: 1px solid var(--linea); }
-    .map-tools .btn:hover { background: var(--sutil); }
-
-    /* =====================================================================
-       Distribución flotante por tamaño de pantalla
-       ===================================================================== */
-    @media (min-width: 992px) {
-      #sidebar {
-        position: fixed; z-index: 10;
-        left: var(--gap); top: var(--panel-top); bottom: var(--gap); width: var(--side-w);
-        display: flex; flex-direction: column; overflow: hidden;
-      }
-      #perfil {
-        position: fixed; z-index: 10;
-        right: var(--gap); top: var(--panel-top); bottom: var(--gap); width: var(--perfil-w);
-      }
-      .map-info {
-        left: calc(var(--side-w) + var(--gap) * 2);
-        bottom: var(--gap);
-        max-width: calc(100vw - var(--side-w) - var(--perfil-w) - var(--gap) * 4 - 56px);
-      }
-      .map-tools { right: calc(var(--perfil-w) + var(--gap) * 2); bottom: var(--gap); }
-    }
-
-    @media (min-width: 992px) and (max-width: 1279.98px) {
-      :root { --side-w: 260px; --perfil-w: 340px; }
-      .brand small, .brand-sep { display: none; }
-      .stat { padding: .6rem .2rem; }
-      .stat span { font-size: .56rem; letter-spacing: .02em; }
-    }
-
-    @media (max-width: 991.98px) {
-      :root { --gap: 12px; }
-      .topbar-pill { margin: 12px auto; flex-wrap: wrap; padding: .5rem; gap: .5rem; }
-      .search-wrap { order: 3; flex-basis: 100%; }
-      .view-toggle { margin-left: auto; }
-      .brand-sep { display: none; }
-
-      #sidebar.glass { border-radius: 0 var(--r-panel) var(--r-panel) 0; }
-
-      #perfil {
-        position: fixed; z-index: 10;
-        left: var(--gap); right: var(--gap); bottom: var(--gap);
-        max-height: 48vh; max-height: 48dvh;
-      }
-      #perfil.is-empty { display: none; }
-
-      .map-info { left: var(--gap); right: calc(var(--gap) + 50px); top: 124px; padding: .55rem .75rem; }
-      .map-tools { right: var(--gap); top: 124px; }
-    }
-
-    @media (max-width: 575.98px) {
-      .brand small, .vt-sub, .brand-long { display: none; }
-      .brand-mark { width: 32px; height: 32px; font-size: .9rem; }
-      .topbar-pill { gap: .4rem; }
-      .brand { font-size: .9rem; }
-      .brand.gap-2 { gap: .45rem !important; }
-      .view-toggle { padding: .35rem .65rem .35rem .5rem; gap: .45rem; }
-      .vt-title { font-size: .8rem; }
-      .map-info { top: 116px; font-size: .7rem; right: calc(var(--gap) + 120px); }
-      .map-info .meta.solo-interna { display: none; }
-      .map-info .legend { gap: .15rem .7rem; margin-top: .35rem; padding-top: .35rem; }
-      .map-tools { top: 116px; flex-direction: row; }
-      .map-tools .btn { width: 34px; height: 34px; }
-      .map-tools .btn + .btn { border-top: 0; border-left: 1px solid var(--linea); }
-    }
+    @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto !important; transition:none !important; } }
   </style>
 </head>
 <body>
-
-  <!-- ======================= MAPA A PANTALLA COMPLETA ======================= -->
-  <div id="network-graph" role="region" aria-label="Mapa interactivo del ecosistema I+D+i">
-    <!-- Marcador de posición: app.js lo elimina al dibujar la red -->
-    <div class="graph-placeholder" id="graph-placeholder">
-      <svg viewBox="0 0 280 170" aria-hidden="true">
-        <g stroke="#cbd5e1" stroke-width="1.2">
-          <line x1="140" y1="85" x2="60" y2="40"/><line x1="140" y1="85" x2="70" y2="130"/>
-          <line x1="140" y1="85" x2="215" y2="45"/><line x1="140" y1="85" x2="220" y2="125"/>
-          <line x1="60" y1="40" x2="70" y2="130"/><line x1="215" y1="45" x2="220" y2="125"/>
-          <line x1="220" y1="125" x2="262" y2="92" stroke-dasharray="4 4"/>
-          <line x1="60" y1="40" x2="18" y2="80" stroke-dasharray="4 4"/>
-        </g>
-        <circle cx="140" cy="85" r="14" fill="#0f2e53"/>
-        <circle cx="60" cy="40" r="10" fill="#0f2e53" opacity=".8"/>
-        <circle cx="70" cy="130" r="10" fill="#9b2c2c" opacity=".8"/>
-        <circle cx="215" cy="45" r="10" fill="#9b2c2c" opacity=".8"/>
-        <rect x="212" y="117" width="16" height="16" rx="1" fill="#2f6b4f"/>
-        <circle cx="262" cy="92" r="5" fill="#94a3b8"/>
-        <circle cx="18" cy="80" r="5" fill="#94a3b8"/>
-      </svg>
-      <div class="ph-title">Visualización de red interactiva</div>
-      <div class="ph-sub">Cargando el ecosistema desde <code>datos_prueba.json</code>…</div>
+  <a class="skip-link" href="#contenidoPrincipal">Saltar al contenido</a>
+  <header class="masthead">
+    <div class="shell masthead-inner">
+      <a class="brand" href="#inicio" data-nav="inicio"><img class="brand-logo" src="assets/uah-logo.png" alt="Universidad Alberto Hurtado" width="950" height="414"><span class="brand-copy"><strong>Ecosistema I+D+i</strong><small>Investigación y colaboración</small></span></a>
+      <div class="d-flex gap-3 align-items-center"><span class="demo">Maqueta · Datos ficticios</span><div class="view-control form-switch"><input class="form-check-input" type="checkbox" role="switch" id="toggleVista" checked><label for="toggleVista" id="vistaLabel">Vista interna</label></div></div>
     </div>
-  </div>
-
-  <!-- ======================= 1. BARRA SUPERIOR (píldora) ======================= -->
-  <header class="topbar-wrap">
-    <nav class="topbar-pill glass" aria-label="Navegación principal">
-      <button class="btn-ghost d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Abrir categorías">
-        <i class="bi bi-sliders2"></i>
-      </button>
-
-      <a href="#" class="brand d-flex align-items-center gap-2">
-        <span class="brand-mark"><i class="bi bi-diagram-3-fill"></i></span>
-        <span><span class="brand-long">Ecosistema </span>I+D+i UAH<small>Dirección de Innovación y Transferencia</small></span>
-      </a>
-      <span class="brand-sep" aria-hidden="true"></span>
-
-      <form class="search-wrap" role="search" onsubmit="return false;">
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-search"></i></span>
-          <input id="buscador" class="form-control" type="search" placeholder="Buscar académico, proyecto o palabra clave…" aria-label="Buscar en el ecosistema">
-        </div>
-      </form>
-
-      <div class="view-toggle form-check form-switch">
-        <input class="form-check-input" type="checkbox" role="switch" id="toggleVista" checked aria-describedby="vtSub">
-        <label for="toggleVista">
-          <div class="vt-title" id="vtTitle">Vista Interna</div>
-          <div class="vt-sub" id="vtSub">Dirección de Innovación</div>
-        </label>
-      </div>
-    </nav>
   </header>
-
-  <!-- ======================= 2. SIDEBAR DE CATEGORÍAS ======================= -->
-  <aside class="sidebar glass offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
-    <div class="offcanvas-header d-lg-none">
-      <h5 class="offcanvas-title" id="sidebarLabel">Categorías</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Cerrar"></button>
-    </div>
-
-    <div class="offcanvas-body d-block p-0">
-      <section class="side-section">
-        <div class="side-label">Facultades</div>
-
-        <input type="radio" class="btn-check" name="filtroFacultad" id="fac-todas" value="todas" checked>
-        <label class="fac-btn" for="fac-todas">
-          <i class="bi bi-grid-3x3-gap"></i> Todas <span class="count">8</span>
-        </label>
-
-        <input type="radio" class="btn-check" name="filtroFacultad" id="fac-ing" value="fac-ing">
-        <label class="fac-btn" for="fac-ing">
-          <span class="dot" style="background:var(--ing)"></span> Ingeniería <span class="count">4</span>
-        </label>
-
-        <input type="radio" class="btn-check" name="filtroFacultad" id="fac-psi" value="fac-psi">
-        <label class="fac-btn" for="fac-psi">
-          <span class="dot" style="background:var(--psi)"></span> Psicología <span class="count">4</span>
-        </label>
-      </section>
-
-      <section class="side-section">
-        <div class="side-label d-flex justify-content-between align-items-center">
-          Palabras clave
-          <a href="#" class="text-decoration-none" id="limpiarKw">limpiar</a>
-        </div>
-        <div class="kw-list">
-          <input type="checkbox" class="btn-check" id="kw-analitica" value="kw-analitica" autocomplete="off">
-          <label class="kw-btn" for="kw-analitica">Analítica de datos <span class="n">3</span></label>
-
-          <input type="checkbox" class="btn-check" id="kw-bienestar" value="kw-bienestar" autocomplete="off">
-          <label class="kw-btn" for="kw-bienestar">Bienestar <span class="n">3</span></label>
-
-          <input type="checkbox" class="btn-check" id="kw-comunidades" value="kw-comunidades" autocomplete="off">
-          <label class="kw-btn" for="kw-comunidades">Comunidades <span class="n">3</span></label>
-
-          <input type="checkbox" class="btn-check" id="kw-territorio" value="kw-territorio" autocomplete="off">
-          <label class="kw-btn" for="kw-territorio">Territorio <span class="n">3</span></label>
-
-          <input type="checkbox" class="btn-check" id="kw-ia" value="kw-ia" autocomplete="off">
-          <label class="kw-btn" for="kw-ia">Inteligencia artificial <span class="n">2</span></label>
-
-          <input type="checkbox" class="btn-check" id="kw-movilidad" value="kw-movilidad" autocomplete="off">
-          <label class="kw-btn" for="kw-movilidad">Movilidad urbana <span class="n">2</span></label>
-
-          <input type="checkbox" class="btn-check" id="kw-saludmental" value="kw-saludmental" autocomplete="off">
-          <label class="kw-btn" for="kw-saludmental">Salud mental <span class="n">2</span></label>
-
-          <input type="checkbox" class="btn-check" id="kw-educacion" value="kw-educacion" autocomplete="off">
-          <label class="kw-btn" for="kw-educacion">Educación <span class="n">2</span></label>
-
-          <input type="checkbox" class="btn-check" id="kw-migracion" value="kw-migracion" autocomplete="off">
-          <label class="kw-btn" for="kw-migracion">Migración <span class="n">2</span></label>
-
-          <input type="checkbox" class="btn-check" id="kw-gobdigital" value="kw-gobdigital" autocomplete="off">
-          <label class="kw-btn" for="kw-gobdigital">Gobierno digital <span class="n">2</span></label>
-        </div>
-      </section>
-
-      <section class="side-section pb-4">
-        <div class="side-label">Acerca de estos datos</div>
-        <p class="small text-secondary mb-0">
-          Piloto con las facultades de Ingeniería y Psicología.
-          <span class="demo-flag">Datos ficticios</span>
-        </p>
-      </section>
-    </div>
-  </aside>
-
-  <!-- ======================= 3. FICHA DEL ACADÉMICO (flotante) ======================= -->
-  <!-- Contenido estático de respaldo: app.js lo reemplaza al seleccionar un académico -->
-  <aside class="glass" id="perfil" aria-labelledby="perfilNombre">
-    <div class="profile" id="perfilContenido" aria-live="polite">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="side-label mb-0">Ficha del académico</span>
-        <button class="btn btn-sm btn-light" type="button" aria-label="Cerrar ficha"><i class="bi bi-x-lg"></i></button>
-      </div>
-
-      <div class="profile-head">
-        <div class="avatar" aria-hidden="true">VR</div>
-        <div>
-          <h2 id="perfilNombre">Valentina Rojas Fuentes</h2>
-          <div class="role mb-2">Profesora asociada</div>
-          <span class="fac-badge"><i class="bi bi-building"></i> Facultad de Ingeniería</span>
-        </div>
-      </div>
-
-      <div class="stats">
-        <div class="stat"><b>2</b><span>Proyectos</span></div>
-        <div class="stat"><b>5</b><span>Colaboradores</span></div>
-        <div class="stat"><b>2</b><span>Interfacultad</span></div>
-      </div>
-
-      <section class="p-section">
-        <h3><i class="bi bi-bullseye"></i> Líneas de investigación</h3>
-        <div class="line-item"><i class="bi bi-dot fs-4"></i> Ciencia de datos</div>
-        <div class="line-item"><i class="bi bi-dot fs-4"></i> Ciudades inteligentes</div>
-      </section>
-
-      <section class="p-section">
-        <h3><i class="bi bi-tags"></i> Palabras clave</h3>
-        <span class="chip">Analítica de datos</span>
-        <span class="chip">Movilidad urbana</span>
-        <span class="chip">Inteligencia artificial</span>
-        <span class="chip">Bienestar</span>
-      </section>
-
-      <section class="p-section solo-interna">
-        <h3><i class="bi bi-share"></i> Potenciales conexiones (2do grado) <span class="tag-int">Interno</span></h3>
-        <div class="conn">
-          <div class="avatar" aria-hidden="true">FC</div>
-          <div class="flex-grow-1">
-            <div class="conn-name">Fernanda Castillo Araya</div>
-            <div class="conn-meta">Psicología · Salud mental, Bienestar digital</div>
-            <div class="path" aria-label="Ruta de conexión">
-              <span class="node">V. Rojas</span><i class="bi bi-arrow-right"></i>
-              <span class="node">C. Herrera</span><i class="bi bi-arrow-right"></i>
-              <span class="node">F. Castillo</span>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-2" style="font-size:.75rem">
-              <span>Comparten: <span class="chip py-0 px-2 m-0">Bienestar</span></span>
-              <span class="text-secondary">Afinidad 50%</span>
-            </div>
-            <div class="affinity" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" aria-label="Afinidad"><div style="width:50%"></div></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="p-section solo-interna">
-        <h3><i class="bi bi-cash-coin"></i> Coincidencias de financiamiento estratégico <span class="tag-int">Interno</span></h3>
-        <div class="fund alta">
-          <div class="fund-top">
-            <div><div class="fund-name">Tecnologías para la salud mental</div><div class="fund-inst">FONDEF IDeA I+D · ANID</div></div>
-            <span class="lvl alta">Alta</span>
-          </div>
-          <div class="fund-foot">
-            <span class="kws"><i class="bi bi-check2"></i> Bienestar, Inteligencia artificial</span>
-            <span class="state"><i class="d" style="background:var(--proy)"></i> Convocatoria abierta</span>
-          </div>
-        </div>
-        <div class="fund alta">
-          <div class="fund-top">
-            <div><div class="fund-name">Movilidad y ciudades sostenibles</div><div class="fund-inst">FIC-R · Gobierno Regional Metropolitano</div></div>
-            <span class="lvl alta">Alta</span>
-          </div>
-          <div class="fund-foot">
-            <span class="kws"><i class="bi bi-check2"></i> Analítica de datos, Movilidad urbana</span>
-            <span class="state"><i class="d" style="background:#9aa4b2"></i> Próxima convocatoria</span>
-          </div>
-        </div>
-        <div class="fund media">
-          <div class="fund-top">
-            <div><div class="fund-name">Educación y tecnologías del aprendizaje</div><div class="fund-inst">FONDEF IDeA I+D · ANID</div></div>
-            <span class="lvl media">Media</span>
-          </div>
-          <div class="fund-foot">
-            <span class="kws"><i class="bi bi-check2"></i> Inteligencia artificial</span>
-            <span class="state"><i class="d" style="background:var(--proy)"></i> Convocatoria abierta</span>
-          </div>
-        </div>
-        <div class="fund media">
-          <div class="fund-top">
-            <div><div class="fund-name">Estado y transformación digital</div><div class="fund-inst">Fondecyt de Iniciación · ANID</div></div>
-            <span class="lvl media">Media</span>
-          </div>
-          <div class="fund-foot">
-            <span class="kws"><i class="bi bi-check2"></i> Analítica de datos</span>
-            <span class="state"><i class="d" style="background:var(--proy)"></i> Convocatoria abierta</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="p-section public-note">
-        <div class="alert small mb-0">
-          <i class="bi bi-info-circle me-1"></i>
-          ¿Quieres colaborar con esta investigadora? Escribe a la Dirección de Innovación y Transferencia.
-        </div>
-      </section>
-    </div>
-  </aside>
-
-  <!-- ======================= Controles flotantes sobre el mapa ======================= -->
-  <div class="map-info glass" aria-live="polite">
-    <div>
-      <span class="mi-title">Red de colaboración</span>
-      <span class="meta" id="graphMeta">8 académicos · 4 proyectos · 2 facultades</span>
-      <span class="meta solo-interna ms-2 text-nowrap"><i class="bi bi-lock"></i> Incluye proyectos internos</span>
-    </div>
-    <div class="legend">
-      <span><i class="bi bi-circle-fill" style="color:var(--ing)"></i> Ingeniería</span>
-      <span><i class="bi bi-circle-fill" style="color:var(--psi)"></i> Psicología</span>
-      <span><i class="bi bi-folder-fill" style="color:var(--proy)"></i> Proyecto</span>
-      <span><i class="bi bi-tag-fill" style="color:var(--kw)"></i> Palabra clave</span>
-      <span class="solo-interna"><i class="lg-line"></i> Conexión potencial</span>
-    </div>
-  </div>
-
-  <div class="map-tools glass">
-    <button class="btn btn-sm" type="button" id="btnZoomIn" title="Acercar" aria-label="Acercar"><i class="bi bi-plus-lg"></i></button>
-    <button class="btn btn-sm" type="button" id="btnZoomOut" title="Alejar" aria-label="Alejar"><i class="bi bi-dash-lg"></i></button>
-    <button class="btn btn-sm" type="button" id="btnFit" title="Ajustar a la pantalla" aria-label="Ajustar a la pantalla"><i class="bi bi-arrows-fullscreen"></i></button>
-  </div>
-
+  <nav class="main-nav" aria-label="Navegación principal"><div class="shell nav-inner">
+    <a href="#inicio" data-nav="inicio">Inicio</a><a href="#perfiles" data-nav="perfiles">Perfiles</a><a href="#unidades" data-nav="unidades">Unidades de investigación</a><a href="#proyectos" data-nav="proyectos">Proyectos</a><a href="#red" data-nav="red">Red del ecosistema</a><a href="#financiamiento" data-nav="financiamiento" class="solo-interna">Financiamiento</a>
+  </div></nav>
+  <section class="search-zone" aria-label="Buscar en el portal">
+    <div class="shell"><div class="hero-copy"><div class="eyebrow">Investigación · Desarrollo · Innovación</div><h1>Conocimiento que conecta<span>.</span></h1><p>Explora quién investiga qué y descubre nuevas oportunidades de colaboración.</p></div>
+    <form id="formBuscador" class="portal-search" role="search"><i class="bi bi-search" aria-hidden="true"></i><label for="buscador" class="visually-hidden">Buscar en el ecosistema</label><input id="buscador" type="search" placeholder="Nombre, proyecto, área de investigación…" autocomplete="off"><button class="btn btn-primary btn-sm px-3" type="submit">Buscar</button></form></div>
+  </section>
+  <div class="stats-strip" id="resumenGlobal"><div class="shell"><div class="global-stats" id="estadisticasGlobales" aria-label="Estadísticas globales"></div></div></div>
+  <main id="contenidoPrincipal" tabindex="-1">
+    <section id="inicio" class="shell page-space"></section>
+    <section id="directorio" class="shell page-space" hidden></section>
+    <section id="perfil" class="shell page-space" aria-label="Perfil de investigación" hidden><div id="perfilContenido"></div></section>
+    <section id="redEcosistema" class="shell page-space" hidden></section>
+    <div id="mensajeCarga" class="shell loading" role="status">Cargando el ecosistema de investigación…</div>
+  </main>
+  <footer class="footer"><div class="shell footer-inner"><div><strong>Dirección de Innovación y Transferencia · UAH</strong><p>Prototipo académico para explorar colaboración e investigación aplicada.</p></div><p>Todos los perfiles, unidades y oportunidades de este portal son ficticios.<br>Datos de demostración · Actualización: <span id="fechaDatos">—</span></p></div></footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Librería de grafos (vis-network) y lógica de la maqueta -->
   <script src="https://unpkg.com/vis-network@10.1.2/standalone/umd/vis-network.min.js"></script>
   <script src="app.js"></script>
 </body>

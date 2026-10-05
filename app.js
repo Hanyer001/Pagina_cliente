@@ -1,1111 +1,340 @@
-/* =============================================================================
- * app.js — Ecosistema I+D+i UAH (maqueta)
- * -----------------------------------------------------------------------------
- * 1. Carga datos_prueba.json con fetch().
- * 2. Transforma los nodos y enlaces del JSON al formato de vis-network.
- * 3. Dibuja la red en #network-graph y quita el marcador de posición.
- * 4. Al seleccionar un académico, reconstruye la ficha en #perfil.
- * 5. Conecta los filtros (facultad y palabras clave), el buscador,
- *    los botones de zoom y el interruptor Vista Interna / Externa.
- *
- * Requiere, antes de este archivo:
- *   <script src="https://unpkg.com/vis-network@10.1.2/standalone/umd/vis-network.min.js"></script>
- * ========================================================================== */
-'use strict';
-
-/* -----------------------------------------------------------------------------
- * Configuración y estado
- * -------------------------------------------------------------------------- */
-
-const RUTA_DATOS = 'datos_prueba.json';
-const ALFA_ATENUADO = 0.12; // opacidad de los nodos que no cumplen el filtro
-const SEMILLA_LAYOUT = 21;  // cambia este número para probar otra disposición inicial de la red
-
-/** Lee una variable CSS del :root para usar los mismos colores que el HTML. */
-function cssVar(nombre, respaldo) {
-  const valor = getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
-  return valor || respaldo;
-}
-
-// Paleta institucional: se lee de las variables CSS del HTML (con respaldo por si faltan).
-const COLOR = {
-  ing: cssVar('--ing', '#0f2e53'),      // azul marino
-  psi: cssVar('--psi', '#9b2c2c'),      // burdeos
-  proy: cssVar('--proy', '#2f6b4f'),    // verde profundo
-  kw: cssVar('--kw', '#94a3b8'),
-  marca: cssVar('--marca', '#0f2e53'),
-  acento: cssVar('--acento', '#b08d3a'),// dorado sobrio: solo selección
-  texto: cssVar('--texto', '#0f172a'),
-  texto2: cssVar('--texto-2', '#475569'),
-  arista: '#cbd5e1',
-};
-const FUENTE = 'Inter, system-ui, -apple-system, "Segoe UI", sans-serif';
-
-/** Color de cada facultad. Una facultad nueva sin color usa gris. */
-const COLOR_FACULTAD = { 'fac-ing': COLOR.ing, 'fac-psi': COLOR.psi };
-const colorFacultad = (idFacultad) => COLOR_FACULTAD[idFacultad] || '#475569';
-
-/** Estado global de la aplicación. */
-const estado = {
-  datos: null,            // JSON original
-  red: null,              // instancia de vis.Network
-  nodos: null,            // vis.DataSet de nodos
-  aristas: null,          // vis.DataSet de aristas
-  porId: new Map(),       // id -> objeto original del JSON (cualquier tipo)
-  indices: null,          // relaciones precalculadas (ver construirIndices)
-  filtroFacultad: 'todas',
-  filtroPalabras: new Set(),
-  vistaInterna: true,
-  seleccionado: null,     // id del académico cuya ficha está abierta
-};
-
-/* -----------------------------------------------------------------------------
- * Utilidades
- * -------------------------------------------------------------------------- */
-
-/** Convierte #rrggbb a rgba(r,g,b,a). */
-function rgba(hex, alfa) {
-  const h = hex.replace('#', '');
-  const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alfa})`;
-}
-
-/** Escapa texto antes de insertarlo como HTML. */
-function esc(texto) {
-  return String(texto ?? '').replace(/[&<>"']/g, (c) => (
-    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-  ));
-}
-
-/** Normaliza para buscar sin tildes ni mayúsculas. */
-const normalizar = (t) => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-
-/** Iniciales para el avatar: "Valentina Rojas Fuentes" -> "VR". */
-function iniciales(nombre) {
-  const partes = nombre.split(/\s+/);
-  return ((partes[0]?.[0] || '') + (partes[1]?.[0] || '')).toUpperCase();
-}
-
-/** Nombre corto de una palabra clave o facultad a partir de su id. */
-const etiquetaDe = (id) => estado.porId.get(id)?.etiqueta ?? id;
-
-/* -----------------------------------------------------------------------------
- * 1. Carga de datos
- * -------------------------------------------------------------------------- */
-
-async function cargarDatos() {
-  const respuesta = await fetch(RUTA_DATOS, { cache: 'no-store' });
-  if (!respuesta.ok) throw new Error(`No se pudo leer ${RUTA_DATOS} (HTTP ${respuesta.status})`);
-  return respuesta.json();
-}
-
-/**
- * Precalcula relaciones que se usan en filtros y fichas, a partir de los enlaces.
- * Así el resto del código no recorre la lista de enlaces cada vez.
+/* Ecosistema I+D+i UAH · Maqueta de portal inspirada en PURE.
+ * Datos ficticios separados de la interfaz. Bootstrap 5 + vis-network + JS puro.
+ * Rutas locales: #inicio, #perfiles, #proyectos, #perfil/acad-01/red.
  */
-function construirIndices(datos) {
-  const idx = {
-    miembrosProyecto: new Map(),   // proy -> [{ academico, rol }]
-    academicosDePalabra: new Map(),// kw -> Set(acad)
-    academicosDeFacultad: new Map(),// fac -> Set(acad)
-    colaboradores: new Map(),      // acad -> Map(otroAcad -> enlace)
-  };
-  const agregar = (mapa, clave, valor) => {
-    if (!mapa.has(clave)) mapa.set(clave, new Set());
-    mapa.get(clave).add(valor);
-  };
+'use strict';
+const RUTA_DATOS = 'datos_prueba.json';
+const COLOR = {ing:'#222222',psi:'#b54215',proy:'#36765d',kw:'#a79b8d',acento:'#f06427'};
+const estado = {
+  datos:null, porId:new Map(), unidades:new Map(), indices:null,
+  vistaInterna:true, seleccionado:null, panel:'general',
+  categoria:'todos', consulta:'', facultad:'todas', palabra:'todas', unidad:'todas', orden:'nombre',
+  red:null, proyectosRed:true, temasRed:false, potencialesRed:true, circular:false,
+};
+const cantidad = (n,singular,plural=singular+'s') => n+' '+(n===1?singular:plural);
+const $ = id => document.getElementById(id);
+const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const normalizar = value => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const iniciales = nombre => String(nombre || '').split(/\s+/).slice(0,2).map(x=>x[0] || '').join('').toUpperCase();
+const etiquetaDe = id => estado.porId.get(id)?.etiqueta || estado.unidades.get(id)?.nombre || id;
+const claseFac = a => a.facultad === 'fac-psi' ? 'psi' : '';
+const colorFac = a => a.facultad === 'fac-psi' ? COLOR.psi : COLOR.ing;
+const proyectoVisible = p => Boolean(p && (estado.vistaInterna || p.visibilidad !== 'interna'));
+const icon = nombre => `<i class="bi bi-${nombre}" aria-hidden="true"></i>`;
+function avatar(a,extra='') { return `<span class="avatar ${claseFac(a)} ${extra}" aria-hidden="true">${esc(iniciales(a.nombre))}</span>`; }
+function empty(mensaje,titulo='Sin resultados') { return `<div class="empty-state glass">${icon('search')}<h2>${esc(titulo)}</h2><p>${esc(mensaje)}</p></div>`; }
+function chips(ids,interactivos=true) { return `<div class="chips">${(ids||[]).map(id=>interactivos?`<button class="chip" type="button" data-palabra="${esc(id)}">${esc(etiquetaDe(id))}</button>`:`<span class="chip">${esc(etiquetaDe(id))}</span>`).join('')}</div>`; }
+function status(p) { return `<span class="status-chip ${/formulación/i.test(p.estado)?'formulation':/finalizado/i.test(p.estado)?'finished':''}">${esc(p.estado || 'Sin estado')}</span>`; }
+function breadcrumbs(nombre,grupo='Perfiles',ruta='perfiles') { return `<div class="breadcrumb-line"><a href="#inicio" data-nav="inicio">Inicio</a>${icon('chevron-right')}<a href="#${ruta}" data-nav="${ruta}">${esc(grupo)}</a>${icon('chevron-right')}<span>${esc(nombre)}</span></div>`; }
+function destruirRed() { if(estado.red) { estado.red.destroy(); estado.red=null; } }
 
-  for (const e of datos.enlaces) {
-    switch (e.tipo) {
-      case 'INVESTIGA_EN':
-        if (!idx.miembrosProyecto.has(e.target)) idx.miembrosProyecto.set(e.target, []);
-        idx.miembrosProyecto.get(e.target).push({ academico: e.source, rol: e.rol });
-        break;
-      case 'TIENE_PALABRA_CLAVE':
-        agregar(idx.academicosDePalabra, e.target, e.source);
-        break;
-      case 'PERTENECE_A':
-        agregar(idx.academicosDeFacultad, e.target, e.source);
-        break;
-      case 'COLABORA_CON': // no dirigida: se registra en ambos sentidos
-        for (const [a, b] of [[e.source, e.target], [e.target, e.source]]) {
-          if (!idx.colaboradores.has(a)) idx.colaboradores.set(a, new Map());
-          idx.colaboradores.get(a).set(b, e);
-        }
-        break;
+function construirIndices(datos) {
+  const idx={miembrosProyecto:new Map(),colaboradores:new Map()};
+  for(const e of datos.enlaces || []) {
+    if(e.tipo==='INVESTIGA_EN') {
+      if(!idx.miembrosProyecto.has(e.target)) idx.miembrosProyecto.set(e.target,[]);
+      const list=idx.miembrosProyecto.get(e.target);
+      if(!list.some(m=>m.academico===e.source)) list.push({academico:e.source,rol:e.rol});
+    }
+    if(e.tipo==='COLABORA_CON') for(const [a,b] of [[e.source,e.target],[e.target,e.source]]) {
+      if(!idx.colaboradores.has(a)) idx.colaboradores.set(a,new Map());
+      idx.colaboradores.get(a).set(b,e);
     }
   }
   return idx;
 }
+function proyectosDelAcademico(a) {
+  const ids=new Set(a.proyectos || []);
+  for(const [id,miembros] of estado.indices.miembrosProyecto) if(miembros.some(m=>m.academico===a.id)) ids.add(id);
+  return [...ids].map(id=>estado.porId.get(id)).filter(proyectoVisible).sort((a,b)=>(b.anioInicio||0)-(a.anioInicio||0));
+}
+function proyectosCompartidos(e) { return (e.proyectosCompartidos||[]).map(id=>estado.porId.get(id)).filter(proyectoVisible); }
+function colaboracionVisible(e) {
+  return estado.vistaInterna || !(e.proyectosCompartidos||[]).length || proyectosCompartidos(e).length>0 || Number(e.publicacionesConjuntas)>0;
+}
+function colaboradoresDe(a) { return [...(estado.indices.colaboradores.get(a.id)||[])].filter(([id,e])=>estado.porId.has(id)&&colaboracionVisible(e)); }
+function coincidenciasDe(a) {
+  if(!estado.vistaInterna) return [];
+  return (a.coincidenciasFinanciamiento||[]).map(c=>({...c,datos:estado.datos.catalogos?.lineasFinanciamiento?.find(l=>l.id===c.linea)})).filter(c=>c.datos);
+}
+function renderEstadisticasGlobales() {
+  const n=estado.datos.nodos;
+  const items=[['people','Perfiles',n.Academico.length,'perfiles'],['buildings','Unidades de investigación',estado.unidades.size,'unidades'],['folder2-open','Proyectos',n.Proyecto.filter(proyectoVisible).length,'proyectos'],['diagram-3','Colaboraciones',new Set(estado.datos.enlaces.filter(e=>e.tipo==='COLABORA_CON'&&colaboracionVisible(e)).map(e=>[e.source,e.target].sort().join('|'))).size,'red'],['tags','Áreas temáticas',n.PalabraClave.length,'temas']];
+  if(estado.vistaInterna) items.push(['cash-coin','Líneas de financiamiento',estado.datos.catalogos?.lineasFinanciamiento?.length || 0,'financiamiento']);
+  $('estadisticasGlobales').innerHTML=items.map(([i,label,num,ruta])=>`<button type="button" data-nav="${ruta}" aria-label="Explorar ${esc(label)}: ${num}">${icon(i)}<strong>${num}</strong><span>${esc(label)}</span></button>`).join('');
+  // CSS conserva tres columnas en móviles, con independencia del modo.
+  $('estadisticasGlobales').style.setProperty('--total',items.length);
+}
+function tarjetaAcademico(a,listado=false) {
+  const proyectos=proyectosDelAcademico(a);
+  const nombre=`<a href="#perfil/${esc(a.id)}" data-academico="${esc(a.id)}">${esc(a.nombre)}</a>`;
+  if(listado) return `<article class="glass result-person">${avatar(a)}<div class="flex-grow-1"><h2>${nombre}</h2><div class="meta">${esc(a.cargo)} · ${esc(etiquetaDe(a.facultad))}</div><p>${esc(a.lineasInvestigacion?.join(' · '))}</p>${chips(a.palabrasClave)}<div class="card-foot"><span>${cantidad(proyectos.length,'proyecto')} · ${colaboradoresDe(a).length} colaboradores</span><a href="#perfil/${esc(a.id)}" data-academico="${esc(a.id)}">Ver perfil ${icon('arrow-right')}</a></div></div></article>`;
+  return `<article class="researcher-card glass">${avatar(a)}<h3>${nombre}</h3><p class="meta mb-3">${esc(a.cargo)}<br>${esc(etiquetaDe(a.facultad))}</p>${chips((a.palabrasClave||[]).slice(0,2))}<div class="card-foot"><span>${cantidad(proyectos.length,'proyecto')}</span><a href="#perfil/${esc(a.id)}" data-academico="${esc(a.id)}" aria-label="Ver perfil de ${esc(a.nombre)}">Ver perfil ${icon('arrow-right')}</a></div></article>`;
+}
+function tarjetaProyecto(p,a=null) {
+  const miembros=estado.indices.miembrosProyecto.get(p.id)||[];
+  const rol=a?miembros.find(m=>m.academico===a.id)?.rol:null;
+  return `<article class="project-card glass"><div class="d-flex gap-2 flex-wrap align-items-center">${status(p)}<span class="meta">${esc(p.codigo || p.id)} · ${esc(p.anioInicio)} — ${esc(p.anioTermino)}</span>${p.visibilidad==='interna'?'<span class="demo-label">'+icon('lock')+' Interno</span>':''}</div><h2><a href="#proyecto/${esc(p.id)}" data-proyecto="${esc(p.id)}">${esc(p.titulo || p.etiqueta)}</a></h2><div class="project-meta"><span>${icon('bank')} ${esc(p.instrumento)} · ${esc(p.organismo)}</span>${rol?`<span>${icon('person')} ${esc(rol)}</span>`:''}</div><p>${esc(p.resumen)}</p>${chips(p.palabrasClave)}<div class="card-foot"><span>${miembros.length} integrantes · ${esc((p.facultades||[]).map(etiquetaDe).join(' / '))}</span><a href="#proyecto/${esc(p.id)}" data-proyecto="${esc(p.id)}">Explorar proyecto ${icon('arrow-right')}</a></div></article>`;
+}
+function renderInicio() {
+  $('inicio').innerHTML=`<div class="intro-grid"><div><div class="eyebrow mb-2">Un ecosistema de conocimiento</div><h2>Investigación con sentido público</h2><p>Conoce a los investigadores de la Universidad Alberto Hurtado, sus áreas de trabajo y los proyectos que conectan conocimiento con desafíos de la sociedad.</p><a href="#perfiles" data-nav="perfiles" class="small">Explorar todos los perfiles ${icon('arrow-right')}</a></div><aside class="intro-note glass"><h3>${icon('diagram-3')} Encuentra nuevas conexiones</h3><p>Descubre redes de colaboración entre facultades y áreas de investigación. Cada perfil conecta personas, proyectos y temas en un mismo lugar.</p><a href="#red" data-nav="red" class="small">Explorar el ecosistema ${icon('arrow-right')}</a></aside></div><div class="section-heading"><h2>Investigadores del ecosistema</h2><a href="#perfiles" data-nav="perfiles">Ver todos los perfiles ${icon('arrow-right')}</a></div><div class="researcher-grid">${[0,2,4,5].map(i=>estado.datos.nodos.Academico[i]).filter(Boolean).map(a=>tarjetaAcademico(a)).join('')}</div><div class="section-heading"><h2>Explora por facultad</h2><a href="#unidades" data-nav="unidades">Unidades de investigación ${icon('arrow-right')}</a></div><div class="faculty-grid">${estado.datos.nodos.Facultad.map(f=>`<article class="faculty-card glass ${f.id==='fac-psi'?'psi':''}"><h3>${esc(f.nombre || f.etiqueta)}</h3><p class="meta mb-2">${estado.datos.nodos.Academico.filter(a=>a.facultad===f.id).length} investigadores · ${estado.datos.nodos.Proyecto.filter(p=>proyectoVisible(p)&&p.facultades?.includes(f.id)).length} proyectos</p><button type="button" class="btn btn-sm btn-outline-secondary" data-facultad="${esc(f.id)}">Explorar facultad ${icon('arrow-right')}</button></article>`).join('')}</div>`;
+}
 
-/* -----------------------------------------------------------------------------
- * 2. Estilos de nodos y aristas (normal / atenuado)
- * -------------------------------------------------------------------------- */
-
-/** Devuelve el color base del nodo según su tipo (y facultad, si es académico). */
-function colorBaseNodo(nodo) {
-  switch (nodo.tipo) {
-    case 'Academico': return colorFacultad(nodo.facultad);
-    case 'Facultad': return colorFacultad(nodo.id);
-    case 'Proyecto': return COLOR.proy;
-    default: return COLOR.kw; // PalabraClave
+function coincide(n) {
+  const fac=n.tipo==='Academico'?n.facultad:n.facultad || n.facultades;
+  if(estado.facultad!=='todas'&&!(Array.isArray(fac)?fac.includes(estado.facultad):fac===estado.facultad)) return false;
+  if(estado.palabra!=='todas'&&!(n.palabrasClave||[]).includes(estado.palabra)) return false;
+  if(estado.unidad!=='todas') {
+    if(n.tipo==='Academico'&&n.unidad!==estado.unidad) return false;
+    if(n.tipo==='Proyecto'&&!(estado.indices.miembrosProyecto.get(n.id)||[]).some(m=>estado.porId.get(m.academico)?.unidad===estado.unidad)) return false;
+    if(n.tipo!=='Academico'&&n.tipo!=='Proyecto'&&n.id!==estado.unidad) return false;
   }
+  const texts=[n.nombre,n.titulo,n.etiqueta,n.descripcion,n.resumen,n.biografia,etiquetaDe(n.facultad||''),estado.unidades.get(n.unidad)?.nombre,...(n.lineasInvestigacion||[]),...(n.palabrasClave||[]).map(etiquetaDe)];
+  return !estado.consulta || normalizar(texts.filter(Boolean).join(' ')).includes(normalizar(estado.consulta));
 }
-
-/**
- * Estilo visual de un nodo. Con atenuado=true se vuelve casi transparente.
- * Académicos: relleno sólido del color de su facultad, anillo blanco y sombra corta.
- * La selección se marca con el acento dorado.
- */
-/** Función que asigna un color de fondo más notorio al texto según su tipo */
-function colorFondoTexto(nodo) {
-  if (nodo.tipo === 'Proyecto') return '#cce0d6'; // Verde más sólido
-  if (nodo.tipo === 'PalabraClave') return '#e2e8f0'; // Gris pizarra más marcado
-  if (nodo.tipo === 'Facultad') return 'transparent'; // Las facultades no necesitan fondo
-  
-  // Académicos: Azul claro sólido para Ingeniería, Rosa/Burdeos sólido para Psicología
-  return nodo.facultad === 'fac-ing' ? '#d3e3f3' : '#f5dada'; 
+function ordenar(lista) {
+  const reciente=n=>n.tipo==='Academico'?Math.max(0,...proyectosDelAcademico(n).map(p=>p.anioInicio||0)):n.anioInicio||0;
+  const nombre=n=>String(n.nombre||n.titulo||n.etiqueta||'');
+  return lista.sort((a,b)=>(estado.orden==='reciente'?reciente(b)-reciente(a):0)||nombre(a).localeCompare(nombre(b),'es'));
 }
-
-/**
- * Estilo visual de un nodo.
- */
-function estiloNodo(nodo, atenuado = false) {
-  const base = colorBaseNodo(nodo);
-  const esAcademico = nodo.tipo === 'Academico';
-  const relleno = rgba(base, atenuado ? ALFA_ATENUADO : 1);
-
-  return {
-    opacity: atenuado ? 0.45 : 1,
-    shadow: esAcademico
-      ? { enabled: !atenuado, color: 'rgba(15, 23, 42, 0.18)', size: 6, x: 0, y: 2 }
-      : false,
-    color: {
-      background: relleno,
-      border: esAcademico ? rgba('#ffffff', atenuado ? 0.4 : 1) : relleno,
-      highlight: { background: base, border: COLOR.acento },
-      hover: { background: base, border: esAcademico ? COLOR.acento : base },
-    },
-    font: {
-      color: nodo.tipo === 'Facultad' ? rgba('#ffffff', atenuado ? 0.6 : 1)
-        : rgba(nodo.tipo === 'PalabraClave' ? COLOR.texto2 : COLOR.texto, atenuado ? 0.25 : 1),
-      // NUEVO: Aquí aplicamos el color de fondo para tapar las líneas que pasen por detrás
-      background: atenuado ? undefined : colorFondoTexto(nodo),
-    },
-  };
+function filtrosHTML() {
+  const opciones=(items,seleccion,label)=>`<option value="todas">${label}</option>`+items.map(([v,t])=>`<option value="${esc(v)}" ${v===seleccion?'selected':''}>${esc(t)}</option>`).join('');
+  return `<aside class="filters glass"><h2>${icon('sliders2')} Filtrar resultados</h2><div><label for="filtroFacultad">Facultad</label><select class="form-select form-select-sm" id="filtroFacultad">${opciones(estado.datos.nodos.Facultad.map(f=>[f.id,f.etiqueta]),estado.facultad,'Todas las facultades')}</select></div><div><label for="filtroPalabra">Área temática</label><select class="form-select form-select-sm" id="filtroPalabra">${opciones(estado.datos.nodos.PalabraClave.map(k=>[k.id,k.etiqueta]),estado.palabra,'Todas las áreas')}</select></div><div><label for="filtroUnidad">Unidad de investigación</label><select class="form-select form-select-sm" id="filtroUnidad">${opciones([...estado.unidades.values()].map(u=>[u.id,u.nombre]),estado.unidad,'Todas las unidades')}</select></div><div><button type="button" id="limpiarFiltros" class="btn btn-sm btn-outline-secondary w-100 mt-4">Limpiar filtros</button></div><p class="meta mt-3 mb-0">${estado.vistaInterna?'Vista interna: incluye proyectos en formulación.':'Vista pública: solo proyectos disponibles para difusión.'}</p></aside>`;
 }
-
-/**
- * Estilo de una arista según su tipo. 
- */
-const ESTILO_ARISTA = {
-  // NUEVO: smooth le da curvatura orgánica a las conexiones humanas
-  COLABORA_CON:        { base: '#475569', alfa: 0.7,  realce: COLOR.acento, smooth: { type: 'curvedCW', roundness: 0.2 } },
-  POTENCIAL:           { base: COLOR.marca, alfa: 0.5, realce: COLOR.acento, dashes: [5, 5], smooth: { type: 'curvedCCW', roundness: 0.2 } },
-  INVESTIGA_EN:        { base: COLOR.proy, alfa: 0.45, realce: COLOR.proy },
-  PERTENECE_A:         { base: COLOR.arista, alfa: 1,  realce: COLOR.texto2 },
-  TIENE_PALABRA_CLAVE: { base: '#e2e8f0', alfa: 1,    realce: COLOR.texto2 },
-};
-const ANCHO_ARISTA = { POTENCIAL: 1.2, INVESTIGA_EN: 1.2, PERTENECE_A: 1, TIENE_PALABRA_CLAVE: 0.8 };
-
-const LARGO_ARISTA = { PERTENECE_A: 60, TIENE_PALABRA_CLAVE: 110, INVESTIGA_EN: 160, COLABORA_CON: 230 };
-
-function estiloArista(arista, atenuado = false) {
-  const e = ESTILO_ARISTA[arista.tipo] || ESTILO_ARISTA.TIENE_PALABRA_CLAVE;
-  const realce = rgba(e.realce, atenuado ? 0.25 : 1);
-  return {
-    width: arista.tipo === 'COLABORA_CON' ? 1 + (arista.peso || 1) * 1.2 : ANCHO_ARISTA[arista.tipo] ?? 1,
-    dashes: e.dashes || false,
-    smooth: e.smooth || false, // Aplica la curvatura si está definida
-    color: { color: rgba(e.base, atenuado ? 0.07 : e.alfa), highlight: realce, hover: realce, inherit: false },
-  };
+function tarjetaUnidad(u) {
+  const miembros=estado.datos.nodos.Academico.filter(a=>a.unidad===u.id);
+  return `<article class="unit-card glass"><div class="section-label">${esc(u.tipo)} · ${esc(etiquetaDe(u.facultad))}</div><h2>${esc(u.nombre)}</h2><p class="muted small">${esc(u.descripcion)}</p>${chips(u.palabrasClave)}<div class="card-foot"><span>${miembros.length} investigadores</span><button type="button" class="btn btn-sm btn-outline-secondary" data-unidad="${esc(u.id)}">Ver integrantes y proyectos ${icon('arrow-right')}</button></div></article>`;
 }
-
-/* -----------------------------------------------------------------------------
- * 3. Mapeo JSON -> formato vis-network
- * -------------------------------------------------------------------------- */
-
-/**
- * Posiciones ancla de las facultades: se reparten en un círculo (con 2 facultades,
- * una a cada lado). En pantallas verticales se ubican arriba y abajo. Las facultades
- * quedan fijas mientras corre la física, y el resto de los nodos se ordena a su alrededor.
- */
-function esVertical() { return window.innerHeight > window.innerWidth * 1.1; }
-
-function anclasFacultades(facultades) {
-  const radio = 380;
-  const vertical = esVertical();
-  const giro = vertical ? -Math.PI / 2 : Math.PI; // primera facultad a la izquierda (o arriba)
-  const anclas = new Map();
-  facultades.forEach((f, i) => {
-    const ang = giro + (i * 2 * Math.PI) / facultades.length;
-    anclas.set(f.id, { x: Math.round(radio * Math.cos(ang)), y: Math.round(radio * Math.sin(ang)) });
-  });
-  return anclas;
+function tarjetaFondo(l,c=null) {
+  return `<article class="unit-card glass"><div class="d-flex justify-content-between gap-3"><span class="section-label">${esc(l.instrumento)}</span>${c?`<span class="status-chip">Coincidencia ${esc(c.nivel)}</span>`:''}</div><h2>${esc(l.nombre)}</h2><p class="meta">${esc(l.organismo)} · ${esc(l.estado)}</p>${chips(c?.palabrasClaveCoincidentes || l.palabrasClave)}<p class="meta mt-3 mb-0">${c?'Coincidencia temática basada en palabras clave del perfil.':'Línea estratégica incluida en el catálogo de demostración.'}</p></article>`;
 }
-
-/** Desplazamiento pequeño y determinista (siempre igual para el mismo índice). */
-function jitter(i, r = 60) {
-  const ang = i * 2.399963; // ángulo áureo: reparte los puntos sin amontonarlos
-  return { x: Math.cos(ang) * r * (0.5 + (i % 3) / 4), y: Math.sin(ang) * r * (0.5 + (i % 3) / 4) };
+function renderDirectorio() {
+  const nombres={todos:'Resultados de búsqueda',perfiles:'Perfiles de investigación',proyectos:'Proyectos de investigación',unidades:'Unidades de investigación',temas:'Áreas temáticas',financiamiento:'Financiamiento estratégico'};
+  $('directorio').innerHTML=`<div class="directory-heading"><div><div class="eyebrow mb-2">Explorar el ecosistema</div><h1>${nombres[estado.categoria] || nombres.todos}</h1></div><span class="demo-label">${icon('info-circle')} Datos ficticios</span></div>${estado.consulta?`<p class="muted small">Búsqueda: «${esc(estado.consulta)}»</p>`:''}<div class="directory-layout">${filtrosHTML()}<div><div class="result-toolbar"><span class="small" id="recuentoResultados" role="status"></span><label class="d-flex align-items-center gap-2 meta">Ordenar<select id="ordenResultados" class="form-select form-select-sm"><option value="nombre" ${estado.orden==='nombre'?'selected':''}>Nombre / título</option><option value="reciente" ${estado.orden==='reciente'?'selected':''}>Inicio más reciente</option></select></label></div><div class="result-list" id="listaResultados"></div></div></div>`;
+  renderResultados();
 }
-
-/** Promedio de las anclas de un conjunto de facultades (para nodos compartidos). */
-function centroDe(ids, anclas, factor) {
-  const pts = ids.map((id) => anclas.get(id)).filter(Boolean);
-  if (!pts.length) return { x: 0, y: 0 };
-  return {
-    x: (pts.reduce((s, p) => s + p.x, 0) / pts.length) * factor,
-    y: (pts.reduce((s, p) => s + p.y, 0) / pts.length) * factor,
-  };
-}
-
-function mapearNodos(datos, idx) {
-  const nodos = [];
-  const anclas = anclasFacultades(datos.nodos.Facultad);
-  const facDe = new Map(datos.nodos.Academico.map((a) => [a.id, a.facultad]));
-
-  for (const f of datos.nodos.Facultad) {
-    const p = anclas.get(f.id);
-    nodos.push({
-      id: f.id, tipo: 'Facultad', label: f.etiqueta.toUpperCase(), title: f.nombre,
-      // NUEVO: Ícono de edificio para las facultades
-      shape: 'icon',
-      icon: { face: '"bootstrap-icons"', code: '\uf1ad', size: 45, color: colorBaseNodo(f) },
-      font: { size: 12, face: FUENTE, strokeWidth: 4, strokeColor: '#ffffff' },
-      mass: 4, x: p.x, y: p.y, fixed: { x: true, y: true },
-      ...estiloNodo(f),
-    });
+function renderResultados() {
+  const tipo=estado.categoria;
+  const a=ordenar(estado.datos.nodos.Academico.filter(coincide));
+  const p=ordenar(estado.datos.nodos.Proyecto.filter(x=>proyectoVisible(x)&&coincide(x)));
+  const u=ordenar([...estado.unidades.values()].filter(coincide));
+  let html='',total=0;
+  if(tipo==='todos'||tipo==='perfiles') { total+=a.length; html+=a.map(x=>tarjetaAcademico(x,true)).join(''); }
+  if(tipo==='todos'||tipo==='proyectos') { total+=p.length; html+=p.map(x=>tarjetaProyecto(x)).join(''); }
+  if(tipo==='todos'||tipo==='unidades') { total+=u.length; html+=u.map(tarjetaUnidad).join(''); }
+  if(tipo==='temas') {
+    const kws=estado.datos.nodos.PalabraClave.filter(k=>(!estado.consulta||normalizar(k.etiqueta).includes(normalizar(estado.consulta))) && (estado.palabra==='todas'||estado.palabra===k.id));
+    const topics=kws.map(k=>({k,as:a.filter(x=>x.palabrasClave.includes(k.id)),ps:p.filter(x=>x.palabrasClave.includes(k.id))})).filter(x=>x.as.length||x.ps.length);
+    total=topics.length;
+    html=topics.map(({k,as,ps})=>`<article class="unit-card glass"><h2>${esc(k.etiqueta)}</h2><p class="meta">${as.length} investigadores · ${ps.length} proyectos</p><button type="button" data-palabra="${esc(k.id)}" class="btn btn-sm btn-outline-secondary">Explorar área ${icon('arrow-right')}</button></article>`).join('');
   }
-
-  const vertical = esVertical();
-  const porFacultad = new Map();
-  datos.nodos.Academico.forEach((a) => porFacultad.set(a.facultad, (porFacultad.get(a.facultad) || 0) + 1));
-  const orden = new Map();
-  const PASO = 75; 
-  
-  datos.nodos.Academico.forEach((a) => {
-    const nColab = idx.colaboradores.get(a.id)?.size ?? 0;
-    const k = orden.get(a.facultad) ?? 0; orden.set(a.facultad, k + 1);
-    const n = porFacultad.get(a.facultad);
-    const ancla = anclas.get(a.facultad) || { x: 0, y: 0 };
-    const franja = (k - (n - 1) / 2) * PASO;
-    const c = { x: ancla.x * 0.6, y: ancla.y * 0.6 };
-    const alterno = (k % 2 ? 1 : -1) * 60;
-    const d = vertical ? { x: alterno, y: franja } : { x: franja, y: alterno };
-    // Los académicos se mantienen como "puntos" porque visualmente funcionan excelente como avatares
-    nodos.push({
-      id: a.id, tipo: 'Academico', label: a.etiqueta,
-      title: `${a.nombre}\n${a.cargo}\n${a.lineasInvestigacion.join(' · ')}`,
-      shape: 'dot', size: 11 + nColab * 1.5,
-      borderWidth: 2, borderWidthSelected: 3,
-      font: { size: 13, face: FUENTE, strokeWidth: 4, strokeColor: '#ffffff', vadjust: 2 },
-      facultad: a.facultad,
-      x: c.x + d.x, y: c.y + d.y,
-      fixed: vertical ? { x: false, y: true } : { x: true, y: false },
-      ...estiloNodo(a),
-    });
-  });
-
-  datos.nodos.Proyecto.forEach((p, i) => {
-    const facs = [...new Set((idx.miembrosProyecto.get(p.id) || []).map((m) => facDe.get(m.academico)))];
-    const c = centroDe(facs, anclas, 0.35), d = jitter(i + 20, 70);
-    nodos.push({
-      id: p.id, tipo: 'Proyecto', label: p.etiqueta,
-      title: `${p.titulo}\n${p.instrumento} · ${p.organismo}\n${p.estado} (${p.anioInicio}–${p.anioTermino})`,
-      // NUEVO: Ícono de carpeta para los proyectos
-      shape: 'icon',
-      icon: { face: '"bootstrap-icons"', code: '\uf3d1', size: 26, color: colorBaseNodo(p) },
-      font: { size: 12, face: FUENTE, strokeWidth: 4, strokeColor: '#ffffff' },
-      visibilidad: p.visibilidad,
-      x: c.x + d.x, y: c.y + d.y,
-      ...estiloNodo(p),
-    });
-  });
-
-  datos.nodos.PalabraClave.forEach((k, i) => {
-    const facs = [...(idx.academicosDePalabra.get(k.id) || [])].map((id) => facDe.get(id));
-    const c = centroDe(facs, anclas, 0.8), d = jitter(i + 40, 110);
-    nodos.push({
-      id: k.id, tipo: 'PalabraClave', label: k.etiqueta, title: `Palabra clave: ${k.etiqueta}`,
-      // NUEVO: Ícono de etiqueta (tag) para las palabras clave
-      shape: 'icon',
-      icon: { face: '"bootstrap-icons"', code: '\uf5aa', size: 20, color: colorBaseNodo(k) },
-      font: { size: 11, face: FUENTE, strokeWidth: 3, strokeColor: '#ffffff' },
-      x: c.x + d.x, y: c.y + d.y,
-      ...estiloNodo(k),
-    });
-  });
-  
-  return nodos;
+  if(tipo==='financiamiento'&&estado.vistaInterna) {
+    const funds=estado.datos.catalogos.lineasFinanciamiento.filter(l=>coincideFondo(l)); total=funds.length;
+    html='<div class="notice">Estas oportunidades y sus estados son ficticios. Las coincidencias ayudan a explorar temas de trabajo en la maqueta.</div>'+funds.map(l=>tarjetaFondo(l)).join('');
+  }
+  $('listaResultados').innerHTML=total?html:empty('Prueba otro nombre o área temática, o limpia los filtros.');
+  $('recuentoResultados').textContent=total+' resultados';
+}
+function coincideFondo(l) {
+  if(estado.consulta&&!normalizar([l.nombre,l.instrumento,l.organismo,...l.palabrasClave.map(etiquetaDe)].join(' ')).includes(normalizar(estado.consulta))) return false;
+  if(estado.palabra!=='todas'&&!l.palabrasClave.includes(estado.palabra)) return false;
+  if(estado.facultad!=='todas'||estado.unidad!=='todas') return estado.datos.nodos.Academico.filter(coincide).some(a=>a.coincidenciasFinanciamiento?.some(c=>c.linea===l.id));
+  return true;
 }
 
-function mapearAristas(datos) {
-  const aristas = datos.enlaces.map((e) => {
-    let title;
-    if (e.tipo === 'COLABORA_CON') {
-      const partes = [];
-      if (e.proyectosCompartidos.length) partes.push(`${e.proyectosCompartidos.length} proyecto(s) en común`);
-      if (e.publicacionesConjuntas) partes.push(`${e.publicacionesConjuntas} publicación(es) conjunta(s)`);
-      title = `Colaboración${e.interfacultad ? ' interfacultad' : ''}\n${partes.join(' · ')}`;
-    } else if (e.tipo === 'INVESTIGA_EN') {
-      title = e.rol;
+function chartProyectos(proyectos) {
+  if(!proyectos.length) return '<p class="meta">Sin proyectos registrados.</p>';
+  const min=Math.min(...proyectos.map(p=>p.anioInicio)),max=Math.max(...proyectos.map(p=>p.anioTermino));
+  const years=Array.from({length:Math.min(max-min+1,12)},(_,i)=>min+i);
+  const counts=years.map(y=>proyectos.filter(p=>p.anioInicio<=y&&p.anioTermino>=y).length);
+  const scale=Math.max(...counts,1);
+  return `<div class="year-chart" role="img" aria-label="Proyectos vigentes por año: ${esc(years.map((y,i)=>y+': '+counts[i]).join(', '))}">${years.map((y,i)=>`<div class="year-column" title="${y}: ${counts[i]} proyectos"><span class="year-bar" style="height:${Math.max(2,counts[i]/scale*46)}px"></span>${y}</div>`).join('')}</div><p class="meta mt-2 mb-0">Proyectos vigentes por año</p>`;
+}
+function perfilGeneral(a) {
+  return `<div class="panel-grid"><div><section class="content-block"><h2>Perfil personal</h2><h3>Información profesional</h3><p>${esc(a.biografia || 'Sin información profesional registrada.')}</p><h3>Líneas de investigación</h3><ul class="simple-list">${(a.lineasInvestigacion||[]).map(l=>`<li>${esc(l)}</li>`).join('') || '<li>Sin líneas registradas.</li>'}</ul><h3>Investigación aplicada y transferencia</h3><p>${esc(a.experienciaTransferencia || 'Sin experiencia registrada.')}</p><h3>Docencia</h3><ul class="simple-list">${(a.docencia||[]).map(l=>`<li>${esc(l)}</li>`).join('') || '<li>Sin docencia registrada.</li>'}</ul></section><section class="content-block"><h2>Formación académica</h2>${(a.formacion||[]).map(f=>`<div class="timeline-item"><span class="meta">${esc(f.anio)}</span><strong>${esc(f.grado)}</strong><span class="muted">${esc(f.institucion)}</span></div>`).join('') || '<p>Sin formación registrada.</p>'}</section></div><aside><section class="content-block inset-card glass"><div class="section-label">Áreas de especialización</div><h2>Temas de investigación</h2><p>Explora otros perfiles y proyectos relacionados con estas áreas.</p>${chips(a.palabrasClave)}</section><section class="content-block inset-card glass"><div class="section-label">Trayectoria</div><h2>Reconocimientos</h2>${(a.reconocimientos||[]).map(r=>`<h3>${icon('award')} ${esc(r.nombre)}</h3><p>${esc(r.organismo)} · ${esc(r.anio)}</p>`).join('') || '<p>Sin reconocimientos registrados.</p>'}</section><div class="notice">Perfil de demostración. La información profesional y los reconocimientos son ficticios.</div></aside></div>`;
+}
+function tarjetaColaborador(a,id,e) {
+  const otro=estado.porId.get(id); const compartidos=proyectosCompartidos(e);
+  const common=(a.palabrasClave||[]).filter(k=>(otro.palabrasClave||[]).includes(k));
+  return `<button type="button" class="glass connection-card" data-academico="${esc(id)}" data-abrir-red="true" aria-label="Ver red de ${esc(otro.nombre)}"><span class="connection-head">${avatar(otro)}<span><strong>${esc(otro.nombre)}</strong><span class="meta">${esc(etiquetaDe(otro.facultad))}</span></span></span><p>${cantidad(compartidos.length,'proyecto compartido','proyectos compartidos')} · ${cantidad(Number(e.publicacionesConjuntas)||0,'publicación conjunta','publicaciones conjuntas')}${otro.facultad!==a.facultad?' · Interfacultad':''}</p>${common.length?`<p>Temas comunes: ${esc(common.map(etiquetaDe).join(', '))}</p>`:''}</button>`;
+}
+function potencialesDe(a) { return estado.vistaInterna?(a.potencialesConexiones||[]).filter(c=>estado.porId.has(c.academico)&&!colaboradoresDe(a).some(([id])=>id===c.academico)):[]; }
+function tarjetaPotencial(a,c) {
+  const otro=estado.porId.get(c.academico),pct=Math.round(Math.max(0,Math.min(1,Number(c.puntaje)||0))*100);
+  return `<article class="glass connection-card"><div class="connection-head">${avatar(otro)}<div><strong><a href="#perfil/${esc(otro.id)}/red" data-academico="${esc(otro.id)}" data-abrir-red="true">${esc(otro.nombre)}</a></strong><span class="meta">${esc(etiquetaDe(otro.facultad))}</span></div></div><div class="d-flex justify-content-between meta mt-3"><span>Afinidad temática</span><strong>${pct}%</strong></div><div class="affinity" role="progressbar" aria-label="Afinidad de demostración con ${esc(otro.nombre)}" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div style="width:${pct}%"></div></div>${chips(c.palabrasClaveCompartidas,false)}<p>${esc(c.motivo || 'Temas de investigación en común.')}</p>${c.intermediarios?.length?`<p>${icon('signpost-split')} Vía ${esc(c.intermediarios.map(etiquetaDe).join(' / '))}</p>`:''}</article>`;
+}
+function redHTML(a=null) {
+  const col=a?colaboradoresDe(a):[];
+  const resumen=a?`${col.length} colaboradores · ${col.filter(([id])=>estado.porId.get(id)?.facultad!==a.facultad).length} de otra facultad`:'Académicos y proyectos conectados por colaboración y participación.';
+  return `<div class="section-heading mt-0"><div><h2>${a?'Red de colaboración':'Red del ecosistema'}</h2><p class="meta mb-0 mt-1">${esc(resumen)}</p></div></div><div class="network-layout"><div class="network-frame glass"><div class="network-toolbar"><div><label><input type="checkbox" id="proyectosRed" ${estado.proyectosRed?'checked':''}> Proyectos</label><label><input type="checkbox" id="temasRed" ${estado.temasRed?'checked':''}> Temas</label>${estado.vistaInterna&&a?`<label><input type="checkbox" id="potencialesRed" ${estado.potencialesRed?'checked':''}> Potenciales</label>`:''}<label><input type="checkbox" id="circularRed" ${estado.circular?'checked':''}> Diseño circular</label></div><div class="network-controls"><button type="button" data-zoom="in" aria-label="Acercar red">${icon('plus')}</button><button type="button" data-zoom="out" aria-label="Alejar red">${icon('dash')}</button><button type="button" data-zoom="fit" aria-label="Ajustar red">${icon('arrows-fullscreen')}</button></div></div><div id="network-graph" class="network-canvas" role="region" aria-label="Red interactiva; también puedes explorar las personas en el listado de colaboradores" tabindex="0"></div><div class="network-legend"><span><i class="dot"></i> Ingeniería</span><span><i class="dot psi"></i> Psicología</span><span><i class="dot project"></i> Proyecto</span>${estado.temasRed?'<span>'+icon('tag')+' Tema</span>':''}${estado.vistaInterna&&a?'<span><i class="dash"></i> Conexión potencial</span>':''}</div><p class="meta mt-3 mb-0">Selecciona una persona o un proyecto para abrir su perfil. Selecciona una línea para ver su relación.</p><div id="networkDetail" class="meta mt-2" aria-live="polite"></div></div><aside><div class="section-label">${a?'Colaboradores directos':'Investigadores'}</div><div class="connection-list">${a?(col.sort(([,x],[,y])=>(y.peso||0)-(x.peso||0)).map(([id,e])=>tarjetaColaborador(a,id,e)).join('')||empty('Este perfil aún no tiene colaboradores registrados.','Sin colaboradores')):estado.datos.nodos.Academico.map(b=>`<button type="button" class="glass connection-card" data-academico="${esc(b.id)}" data-abrir-red="true"><span class="connection-head">${avatar(b)}<span><strong>${esc(b.nombre)}</strong><span class="meta">${esc(etiquetaDe(b.facultad))}</span></span></span></button>`).join('')}</div></aside></div>${a&&estado.vistaInterna?`<section class="content-block mt-5"><div class="section-heading"><h2>Conexiones potenciales</h2><span class="demo-label">${icon('lock')} Vista interna</span></div><p class="muted small">Afinidad temática de demostración, basada en temas e intermediarios registrados. Estas sugerencias no representan colaboraciones confirmadas.</p><div class="potential-grid">${potencialesDe(a).map(c=>tarjetaPotencial(a,c)).join('') || empty('No hay sugerencias adicionales con los datos actuales.','Sin conexiones potenciales')}</div></section>`:''}`;
+}
+function renderPerfil(id,panel='general') {
+  const a=estado.porId.get(id);
+  if(!a||a.tipo!=='Academico') { $('perfilContenido').innerHTML=empty('El académico solicitado no está disponible.','Perfil no encontrado'); return; }
+  estado.seleccionado=id; estado.panel=panel;
+  const proyectos=proyectosDelAcademico(a),col=colaboradoresDe(a),funds=coincidenciasDe(a),u=estado.unidades.get(a.unidad);
+  const tabs=[['general','person','Información general'],['red','diagram-3','Red ('+col.length+')'],['proyectos','folder2-open','Proyectos ('+proyectos.length+')']];
+  if(estado.vistaInterna) tabs.push(['financiamiento','cash-coin','Financiamiento ('+funds.length+')']);
+  if(!tabs.some(t=>t[0]===panel)) panel=estado.panel='general';
+  $('perfilContenido').innerHTML=`${breadcrumbs(a.nombre)}<div class="profile-identity"><div>${avatar(a)}<span class="demo-label mt-3">Perfil ficticio</span></div><div><h1 id="perfilNombre">${esc(a.nombre)}</h1><p class="muted mb-1">${esc(a.cargo)}</p><div class="affiliation"><a href="#perfiles" data-facultad="${esc(a.facultad)}">${esc(estado.porId.get(a.facultad)?.nombre || etiquetaDe(a.facultad))}</a><span class="muted">${esc(a.departamento || '')}</span>${u?`<a href="#todos" data-unidad="${esc(u.id)}">${esc(u.nombre)}</a>`:''}</div><span class="demo-label">${icon('people')} ${esc(a.disponibilidadColaboracion || 'Explora sus áreas de investigación')}</span></div><aside class="profile-metrics"><div class="section-label">Actividad del perfil</div><div class="metric-row"><div><strong>${proyectos.length}</strong><span>Proyectos</span></div><div><strong>${col.length}</strong><span>Colaboradores</span></div><div><strong>${a.palabrasClave?.length || 0}</strong><span>Temas</span></div></div>${chartProyectos(proyectos)}</aside></div><div class="profile-tabs" role="tablist" aria-label="Secciones del perfil">${tabs.map(([id,i,t])=>`<button type="button" role="tab" id="tab-${id}" data-perfil-tab="${id}" aria-controls="panelPerfil" aria-selected="${id===panel}" tabindex="${id===panel?0:-1}">${icon(i)}${esc(t)}</button>`).join('')}</div><div id="panelPerfil" role="tabpanel" aria-labelledby="tab-${panel}" tabindex="0">${panel==='general'?perfilGeneral(a):panel==='red'?redHTML(a):panel==='proyectos'?`<section class="content-block"><h2>Proyectos de investigación</h2><div class="project-summary">${['En ejecución','En formulación','Finalizado'].map(s=>`<span class="status-chip">${proyectos.filter(p=>p.estado===s).length} ${esc(s.toLowerCase())}</span>`).join('')}</div><div class="result-list">${proyectos.map(p=>tarjetaProyecto(p,a)).join('') || empty('No hay proyectos disponibles en esta vista.','Sin proyectos')}</div></section>`:`<section class="content-block"><h2>Coincidencias de financiamiento</h2><p class="muted small">Líneas estratégicas vinculadas con las palabras clave del perfil. Los estados de convocatoria son ficticios.</p><div class="fund-grid">${funds.map(c=>tarjetaFondo(c.datos,c)).join('') || empty('No se registran coincidencias con el catálogo actual.','Sin coincidencias')}</div></section>`}</div>`;
+  document.title=a.nombre+' · Ecosistema I+D+i UAH';
+  if(panel==='red') crearRed(a);
+}
+
+function renderProyecto(id) {
+  const p=estado.porId.get(id);
+  if(!p||p.tipo!=='Proyecto'||!proyectoVisible(p)) { $('perfilContenido').innerHTML=empty('El proyecto no está disponible en esta vista.','Proyecto no disponible'); return; }
+  estado.seleccionado=id;
+  const miembros=estado.indices.miembrosProyecto.get(id)||[];
+  $('perfilContenido').innerHTML=`${breadcrumbs(p.etiqueta,'Proyectos','proyectos')}<div class="profile-identity"><div><div class="avatar" aria-hidden="true">${icon('folder2-open')}</div><span class="demo-label mt-3">Proyecto ficticio</span></div><div><div class="section-label">${esc(p.codigo)}</div><h1 id="perfilNombre">${esc(p.titulo)}</h1><p class="muted mb-2">${esc(p.instrumento)} · ${esc(p.organismo)}</p>${status(p)}${p.visibilidad==='interna'?'<span class="demo-label ms-2">'+icon('lock')+' Proyecto interno</span>':''}<p class="meta mt-3 mb-0">${icon('calendar3')} ${esc(p.anioInicio)} — ${esc(p.anioTermino)}</p></div><aside class="profile-metrics"><div class="section-label">Equipo y alcance</div><div class="metric-row"><div><strong>${miembros.length}</strong><span>Investigadores</span></div><div><strong>${p.facultades?.length || 0}</strong><span>Facultades</span></div></div><p class="meta">${esc(p.territorio || '')}</p>${estado.vistaInterna&&p.presupuestoCLP?`<div class="section-label mt-3">Presupuesto de demostración</div><strong>${Number(p.presupuestoCLP).toLocaleString('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0})}</strong>`:''}</aside></div><div class="profile-tabs"><span class="py-3 small">${icon('folder2-open')} Información del proyecto</span></div><div class="panel-grid"><div><section class="content-block"><h2>Resumen del proyecto</h2><p>${esc(p.resumen)}</p><h3>Objetivos</h3><ul class="simple-list">${(p.objetivos||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul><h3>Resultados esperados</h3><ul class="simple-list">${(p.resultadosEsperados||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section><section class="content-block"><h2>Equipo de investigación</h2><div class="connection-list">${miembros.map(m=>{const a=estado.porId.get(m.academico); return a?`<button type="button" class="connection-card glass" data-academico="${esc(a.id)}"><span class="connection-head">${avatar(a)}<span><strong>${esc(a.nombre)}</strong><span class="meta">${esc(m.rol)} · ${esc(etiquetaDe(a.facultad))}</span></span></span></button>`:'';}).join('') || '<p class="muted">Sin equipo registrado.</p>'}</div></section></div><aside><section class="content-block inset-card glass"><h2>Áreas de investigación</h2>${chips(p.palabrasClave)}</section><section class="content-block inset-card glass"><h2>Hitos del proyecto</h2>${(p.hitos||[]).map(h=>`<div class="timeline-item"><span class="meta">${esc(h.anio)}</span><strong>${esc(h.titulo)}</strong></div>`).join('')}</section><section class="content-block inset-card glass"><h2>Vinculación territorial</h2>${(p.socios||[]).map(s=>`<h3>${esc(s.nombre)}</h3><p>${esc(s.tipo)} · ${esc(s.pais)}<br>Socio ficticio para la maqueta</p>`).join('')}</section></aside></div>`;
+  document.title=p.etiqueta+' · Ecosistema I+D+i UAH';
+}
+
+function datosRed(a=null) {
+  const col=a?colaboradoresDe(a):[];
+  const potentials=a&&estado.potencialesRed?potencialesDe(a):[];
+  const selected=new Set(a?[a.id,...col.map(([id])=>id),...potentials.map(c=>c.academico)]:estado.datos.nodos.Academico.map(x=>x.id));
+  const projects=estado.proyectosRed?(a?proyectosDelAcademico(a):estado.datos.nodos.Proyecto.filter(proyectoVisible)):[];
+  // Los participantes de cada proyecto acompañan al nodo del proyecto.
+  projects.forEach(p=>(estado.indices.miembrosProyecto.get(p.id)||[]).forEach(m=>selected.add(m.academico)));
+  const academics=[...selected].map(id=>estado.porId.get(id)).filter(n=>n?.tipo==='Academico');
+  const nodes=academics.map((n,i)=>({id:n.id,label:n.etiqueta || n.nombre,color:{background:colorFac(n),border:n.id===a?.id?COLOR.acento:'#fff',highlight:{background:colorFac(n),border:COLOR.acento}},borderWidth:n.id===a?.id?4:2,size:n.id===a?.id?25:17,shape:'dot',font:{size:12,color:'#36322d'},x:n.id===a?.id?0:Math.cos(i/academics.length*Math.PI*2)*220,y:n.id===a?.id?0:Math.sin(i/academics.length*Math.PI*2)*220,title:esc(n.nombre)+'<br>'+esc(etiquetaDe(n.facultad))}));
+  nodes.push(...projects.map((p,i)=>({id:p.id,label:p.etiqueta,shape:'square',size:12,color:{background:COLOR.proy,border:'#fff'},borderWidth:2,font:{size:11,color:'#285740'},x:Math.cos(i/projects.length*Math.PI*2+.4)*370,y:Math.sin(i/projects.length*Math.PI*2+.4)*370,title:esc(p.titulo)})));
+  const ids=new Set(nodes.map(n=>n.id));
+  const edges=[]; const pairs=new Set();
+  for(const e of estado.datos.enlaces) {
+    if(e.tipo==='COLABORA_CON'&&ids.has(e.source)&&ids.has(e.target)&&colaboracionVisible(e)) {
+      const key=[e.source,e.target].sort().join('|'); if(pairs.has(key)) continue; pairs.add(key);
+      edges.push({id:e.id,from:e.source,to:e.target,width:1+Math.min(3,proyectosCompartidos(e).length),color:'#b8aea3',title:esc(proyectosCompartidos(e).length+' proyectos compartidos · '+(e.publicacionesConjuntas||0)+' publicaciones conjuntas')});
     }
-    return { id: e.id, from: e.source, to: e.target, tipo: e.tipo, peso: e.peso, title, length: LARGO_ARISTA[e.tipo], ...estiloArista(e) };
-  });
-
-  // Aristas derivadas: potenciales conexiones de 2.º grado (línea punteada, solo vista interna).
-  const vistos = new Set();
-  for (const a of datos.nodos.Academico) {
-    for (const pc of a.potencialesConexiones) {
-      const clave = [a.id, pc.academico].sort().join('|');
-      if (vistos.has(clave)) continue; // A->B y B->A se dibujan una sola vez
-      vistos.add(clave);
-      const arista = {
-        id: `pot-${clave}`, from: a.id, to: pc.academico, tipo: 'POTENCIAL',
-        title: `Conexión potencial\n${pc.motivo}`, physics: false, // no deforma la red
-      };
-      aristas.push({ ...arista, ...estiloArista(arista) });
-    }
+    if(e.tipo==='INVESTIGA_EN'&&ids.has(e.source)&&ids.has(e.target)) edges.push({id:e.id,from:e.source,to:e.target,color:'#82ad98',width:1,title:esc(e.rol || 'Participación en proyecto')});
   }
-  return aristas;
+  if(a) for(const c of potentials) edges.push({id:'pot-'+c.academico,from:a.id,to:c.academico,dashes:[6,5],width:1.5,color:COLOR.acento,title:esc('Conexión potencial · '+Math.round(c.puntaje*100)+'% de afinidad de demostración')});
+  if(estado.temasRed) {
+    const kws=new Set(academics.flatMap(n=>n.palabrasClave||[]));
+    [...kws].forEach((id,i)=>nodes.push({id,label:etiquetaDe(id),shape:'diamond',size:9,color:COLOR.kw,font:{size:10,color:'#65635f'},x:Math.cos(i/kws.size*Math.PI*2)*470,y:Math.sin(i/kws.size*Math.PI*2)*470}));
+    for(const n of academics) for(const id of n.palabrasClave||[]) edges.push({id:'kw-'+n.id+'-'+id,from:n.id,to:id,color:'#dfd8cf',width:1});
+  }
+  return {nodes,edges};
 }
-/** Calcula la envoltura convexa (Convex Hull) usando el algoritmo de Cadena Monótona */
-function convexHull(points) {
-  if (points.length <= 3) return points;
-  const pts = points.slice().sort((a, b) => a.x !== b.x ? a.x - b.x : a.y - b.y);
-  const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-  const lower = [];
-  for (let p of pts) {
-    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
-    lower.push(p);
-  }
-  const upper = [];
-  for (let i = pts.length - 1; i >= 0; i--) {
-    let p = pts[i];
-    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
-    upper.push(p);
-  }
-  upper.pop(); lower.pop();
-  return lower.concat(upper);
-}
-
-/** Dibuja "territorios" sombreados agrupando a los académicos de cada facultad */
-
-/** Dibuja territorios sombreados animados y el halo de selección */
-function iniciarEfectosCanvas(red) {
-  red.on("beforeDrawing", function (ctx) {
-    const posiciones = red.getPositions();
-    const tiempo = Date.now();
-
-    // 1. EFECTO RESPIRACIÓN EN TERRITORIOS (Convex Hulls)
-    const porFacultad = new Map();
-    estado.nodos.forEach(nodo => {
-      if (nodo.tipo === 'Academico' && !nodo.hidden) {
-         const pos = posiciones[nodo.id];
-         if (pos) {
-           if (!porFacultad.has(nodo.facultad)) porFacultad.set(nodo.facultad, []);
-           porFacultad.get(nodo.facultad).push(pos);
-         }
-      }
-    });
-
-    // Pulso muy lento para el fondo (0 a 1)
-    const pulsoLento = (Math.sin(tiempo / 800) + 1) / 2; 
-
-    for (const [idFacultad, puntos] of porFacultad.entries()) {
-      if (puntos.length === 0) continue;
-      const hull = convexHull(puntos);
-      const color = colorFacultad(idFacultad);
-      
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
-      ctx.lineWidth = 80; 
-      
-      // La opacidad oscila suavemente entre 0.03 y 0.05
-      const alfaAnimado = 0.03 + (pulsoLento * 0.02); 
-      ctx.fillStyle = rgba(color, alfaAnimado);
-      ctx.strokeStyle = rgba(color, alfaAnimado);
-
-      ctx.beginPath();
-      ctx.moveTo(hull[0].x, hull[0].y);
-      if (hull.length === 1) {
-         ctx.lineTo(hull[0].x, hull[0].y);
-      } else {
-         for (let i = 1; i < hull.length; i++) ctx.lineTo(hull[i].x, hull[i].y);
-         ctx.closePath();
-      }
-      ctx.fill();
-      ctx.stroke(); 
-    }
-
-    // 2. EFECTO HALO/LATIDO EN NODO SELECCIONADO
-    if (estado.seleccionado) {
-      const posSelect = posiciones[estado.seleccionado];
-      const original = estado.porId.get(estado.seleccionado);
-      
-      // Si el nodo existe y no está oculto
-      if (posSelect && original && !estado.nodos.get(estado.seleccionado).hidden) {
-        const colorSelect = colorBaseNodo(original);
-        // Pulso rápido para llamar la atención (0 a 1)
-        const pulsoRapido = (Math.sin(tiempo / 250) + 1) / 2; 
-        
-        // El radio crece mientras la opacidad se desvanece
-        const radioHalo = 25 + (pulsoRapido * 15);
-        const alfaHalo = 0.3 - (pulsoRapido * 0.25);
-        
-        ctx.beginPath();
-        ctx.arc(posSelect.x, posSelect.y, radioHalo, 0, 2 * Math.PI);
-        ctx.fillStyle = rgba(colorSelect, Math.max(0, alfaHalo));
-        ctx.fill();
-      }
+function crearRed(a=null) {
+  destruirRed(); const canvas=$('network-graph'); if(!canvas) return;
+  if(typeof vis==='undefined') { canvas.innerHTML=empty('No se pudo cargar vis-network. Puedes explorar los perfiles en el listado de la derecha.','Red no disponible'); return; }
+  const d=datosRed(a);
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const red=estado.red=new vis.Network(canvas,{nodes:new vis.DataSet(d.nodes),edges:new vis.DataSet(d.edges)},{layout:{randomSeed:21,improvedLayout:false},interaction:{hover:true,tooltipDelay:150,keyboard:{enabled:true,bindToWindow:false},navigationButtons:false},nodes:{font:{face:'Rubik, sans-serif'},shadow:false},edges:{smooth:{enabled:true,type:'continuous',roundness:.1}},physics:{enabled:!estado.circular&&!reduce,solver:'forceAtlas2Based',stabilization:{enabled:true,iterations:180},forceAtlas2Based:{gravitationalConstant:-60,centralGravity:.012,springLength:140,springConstant:.06,damping:.7}},autoResize:true});
+  red.on('stabilizationIterationsDone',()=>{red.setOptions({physics:false});red.fit({animation:false});});
+  red.fit({animation:false});
+  red.on('click',params=>{
+    const id=params.nodes[0],n=estado.porId.get(id);
+    if(n?.tipo==='Academico') navegar('perfil/'+id+'/red');
+    else if(n?.tipo==='Proyecto'&&proyectoVisible(n)) navegar('proyecto/'+id);
+    else if(n?.tipo==='PalabraClave') explorarPalabra(id);
+    else if(params.edges.length) {
+      const e=estado.datos.enlaces.find(e=>e.id===params.edges[0]);
+      if(e?.tipo==='COLABORA_CON') $('networkDetail').innerHTML=`<strong>${esc(etiquetaDe(e.source))} ↔ ${esc(etiquetaDe(e.target))}</strong><br>${proyectosCompartidos(e).map(p=>`<a href="#proyecto/${esc(p.id)}" data-proyecto="${esc(p.id)}">${esc(p.etiqueta)}</a>`).join(' · ') || 'Sin proyectos compartidos disponibles en esta vista.'} · ${cantidad(Number(e.publicacionesConjuntas)||0,'publicación conjunta','publicaciones conjuntas')}`;
+      else if(e) $('networkDetail').textContent=etiquetaDe(e.source)+' → '+etiquetaDe(e.target)+': '+(e.rol || 'Relación temática');
+      else $('networkDetail').textContent='Conexión potencial: revisa su afinidad temática en las tarjetas inferiores.';
     }
   });
-}
-/* -----------------------------------------------------------------------------
- * 4. Inicialización de la red
- * -------------------------------------------------------------------------- */
-
-/**
- * Zona del mapa que NO queda tapada por los paneles flotantes (píldora, filtros y ficha).
- * El lienzo ocupa toda la ventana, así que el centro visible no es el centro del lienzo:
- * `offset` es el desplazamiento (en píxeles de pantalla) que vis-network necesita para
- * centrar la red en el hueco libre.
- */
-function areaVisible() {
-  const lienzo = document.getElementById('network-graph');
-  const ancho = lienzo.clientWidth;
-  const alto = lienzo.clientHeight;
-  const margen = 24;
-  let izq = 0, der = ancho, sup = 0, inf = alto;
-
-  const pildora = document.querySelector('.topbar-pill');
-  if (pildora) sup = pildora.getBoundingClientRect().bottom;
-
-  // Filtros: solo tapan el mapa cuando flotan fijos a la izquierda (escritorio).
-  const filtros = document.getElementById('sidebar');
-  if (filtros && window.matchMedia('(min-width: 992px)').matches) izq = filtros.getBoundingClientRect().right;
-
-  // Leyenda: en móvil flota arriba, bajo la píldora.
-  const leyenda = document.querySelector('.map-info');
-  if (leyenda) {
-    const r = leyenda.getBoundingClientRect();
-    if (r.height && r.top < alto / 2) sup = Math.max(sup, r.bottom);   // móvil: arriba
-    else if (r.height && r.top > alto / 2) inf = Math.min(inf, r.top); // escritorio: abajo
-  }
-
-  // Ficha: panel derecho en escritorio u hoja inferior en móvil.
-  const perfil = document.getElementById('perfil');
-  if (perfil && getComputedStyle(perfil).display !== 'none') {
-    const r = perfil.getBoundingClientRect();
-    if (r.width && r.left > ancho / 2) der = r.left;
-    else if (r.height && r.top > alto / 2) inf = r.top;
-  }
-
-  return {
-    ancho, alto,
-    libreAncho: Math.max(der - izq - margen * 2, 120),
-    libreAlto: Math.max(inf - sup - margen * 2, 120),
-    offset: { x: (izq + der) / 2 - ancho / 2, y: (sup + inf) / 2 - alto / 2 },
-  };
+  document.fonts?.ready.then(()=>{if(estado.red===red) red.redraw();});
 }
 
-/** Encuadra toda la red dentro de la zona libre del mapa. */
-function ajustarVista(red, animar = true) {
-  const a = areaVisible();
-  const posiciones = Object.values(red.getPositions());
-  if (!posiciones.length) return;
-
-  // Caja que ocupan los nodos (coordenadas del lienzo) y su centro.
-  const xs = posiciones.map((p) => p.x), ys = posiciones.map((p) => p.y);
-  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
-  const RELLENO_X = 140, RELLENO_Y = 70; // espacio para etiquetas y radios de los nodos
-
-  const escala = Math.min(
-    a.libreAncho / (maxX - minX + RELLENO_X),
-    a.libreAlto / (maxY - minY + RELLENO_Y),
-    1.3 // tope para que una red pequeña no se vea gigante
-  );
-  red.moveTo({
-    position: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
-    scale: escala,
-    offset: a.offset, // centro del hueco entre paneles, no del lienzo
-    animation: animar ? { duration: 400, easingFunction: 'easeInOutQuad' } : false,
+function navegar(ruta) { if(location.hash==='#'+ruta) renderRuta(true); else location.hash=ruta; }
+function limpiarEstadoFiltros() { estado.consulta=''; estado.facultad='todas'; estado.palabra='todas'; estado.unidad='todas'; $('buscador').value=''; }
+function explorarPalabra(id) { limpiarEstadoFiltros(); estado.palabra=id; navegar('todos'); }
+function renderRuta(scroll=false) {
+  if(!estado.datos) return;
+  destruirRed(); estado.seleccionado=null;
+  const [ruta='inicio',id,panel='general']=location.hash.slice(1).split('/');
+  const home=!ruta||ruta==='inicio',isProfile=ruta==='perfil'||ruta==='proyecto',isNet=ruta==='red';
+  const category=['perfiles','proyectos','unidades','temas','financiamiento','todos'].includes(ruta)?ruta:'todos';
+  document.body.classList.toggle('compact',!home);
+  $('resumenGlobal').hidden=!home;
+  $('inicio').hidden=!home; $('perfil').hidden=!isProfile; $('redEcosistema').hidden=!isNet; $('directorio').hidden=home||isProfile||isNet;
+  document.querySelectorAll('.solo-interna').forEach(el=>el.hidden=!estado.vistaInterna);
+  const nav=ruta==='perfil'?'perfiles':ruta==='proyecto'?'proyectos':ruta||'inicio';
+  document.querySelectorAll('[data-nav]').forEach(el=>{if(el.closest('.main-nav')) { if(el.dataset.nav===nav) el.setAttribute('aria-current','page'); else el.removeAttribute('aria-current'); }});
+  $('buscador').value=estado.consulta;
+  document.title='Ecosistema I+D+i UAH';
+  if(home) renderInicio();
+  else if(ruta==='perfil') renderPerfil(id,panel);
+  else if(ruta==='proyecto') renderProyecto(id);
+  else if(isNet) { $('redEcosistema').innerHTML=`<div class="directory-heading"><div><div class="eyebrow mb-2">Personas · Proyectos · Temas</div><h1>Explora la red de investigación</h1></div><span class="demo-label">${icon('info-circle')} Datos ficticios</span></div>${redHTML()}`; crearRed(); }
+  else { estado.categoria=category; renderDirectorio(); }
+  renderEstadisticasGlobales();
+  if(scroll) window.scrollTo({top:0,behavior:'instant'});
+}
+function cambiarPanelPerfil(panel,enfocar=false) {
+  const a=estado.seleccionado;
+  if(!a||estado.porId.get(a)?.tipo!=='Academico') return;
+  // Conserva el scroll al alternar secciones, y permite volver con el historial.
+  const pos=window.scrollY;
+  history.pushState(null,'','#perfil/'+a+'/'+panel); destruirRed(); renderPerfil(a,panel);
+  window.scrollTo({top:pos,behavior:'instant'});
+  if(enfocar) document.querySelector('[data-perfil-tab="'+panel+'"]')?.focus();
+}
+function eventos() {
+  $('formBuscador').addEventListener('submit',e=>{e.preventDefault(); estado.consulta=$('buscador').value.trim(); estado.facultad='todas';estado.palabra='todas';estado.unidad='todas'; navegar('todos');});
+  $('toggleVista').addEventListener('change',e=>{
+    estado.vistaInterna=e.target.checked; $('vistaLabel').textContent=estado.vistaInterna?'Vista interna':'Vista pública';
+    const route=location.hash.slice(1).split('/');
+    if(!estado.vistaInterna&&(route[0]==='financiamiento'||(route[0]==='proyecto'&&!proyectoVisible(estado.porId.get(route[1]))))) { navegar(route[0]==='proyecto'?'proyectos':'inicio'); return; }
+    renderRuta();
   });
-}
-
-/** Centra un nodo en la zona libre del mapa (no detrás de un panel). */
-function enfocarNodo(id) {
-  estado.red.focus(id, {
-    scale: Math.max(estado.red.getScale(), 1.1),
-    offset: areaVisible().offset,
-    animation: { duration: 500, easingFunction: 'easeInOutQuad' },
-  });
-}
-
-function crearRed(contenedor, nodos, aristas) {
-  const opciones = {
-    autoResize: true,
-    layout: { randomSeed: SEMILLA_LAYOUT }, // misma disposición en cada carga
-    nodes: { chosen: true },
-    // Líneas rectas: lectura más técnica y ordenada que las curvas.
-    edges: { smooth: true, selectionWidth: 1, hoverWidth: 0.5 },
-    physics: {
-      solver: 'forceAtlas2Based',
-      forceAtlas2Based: {
-        gravitationalConstant: -180, // NUEVO: Repulsión mucho más fuerte para separar los nodos
-        centralGravity: 0.004,      
-        springLength: 110,          
-        springConstant: 0.09,
-        damping: 0.6,               
-        avoidOverlap: 1,            // NUEVO: 1 fuerza a los nodos a no tocarse NUNCA
-      },
-      maxVelocity: 30,
-      minVelocity: 0.5,
-      timestep: 0.4,
-      // Se estabiliza en segundo plano antes de mostrar la red (sin animación de "rebote").
-      stabilization: { enabled: true, iterations: 1000, updateInterval: 50, fit: false },
-    },
-    interaction: { hover: true, tooltipDelay: 150, multiselect: false, navigationButtons: false, zoomView: true },
-  };
-  const red = new vis.Network(contenedor, { nodes: nodos, edges: aristas }, opciones);
-
-  // Una vez ordenada la red se congela la física para que no "baile" durante la demo.
-  red.once('stabilizationIterationsDone', () => {
-    red.setOptions({ physics: false });
-    // Se liberan facultades y académicos para que el usuario pueda arrastrarlos.
-    nodos.update(nodos.get({ filter: (n) => n.fixed }).map((n) => ({ id: n.id, fixed: false })));
-    ajustarVista(red, false);
-  });
-  return red;
-}
-
-/* -----------------------------------------------------------------------------
- * 5. Filtros (facultad + palabras clave) y vista interna/externa
- * -------------------------------------------------------------------------- */
-
-/**
- * Recalcula qué nodos y aristas quedan activos, atenuados u ocultos.
- * Ahora incluye lógica de Revelación Progresiva para no saturar el mapa.
- */
-function aplicarFiltros() {
-  const { datos, indices, filtroFacultad, filtroPalabras, vistaInterna, seleccionado, hovered } = estado;
-  if (!datos) return;
-
-  const academicosActivos = new Set(
-    datos.nodos.Academico
-      .filter((a) => filtroFacultad === 'todas' || a.facultad === filtroFacultad)
-      .filter((a) => filtroPalabras.size === 0 || a.palabrasClave.some((k) => filtroPalabras.has(k)))
-      .map((a) => a.id)
-  );
-  const hayActivo = (conjunto) => [...(conjunto || [])].some((id) => academicosActivos.has(id));
-
-  const activos = new Set(academicosActivos);
-  for (const p of datos.nodos.Proyecto) {
-    if ((indices.miembrosProyecto.get(p.id) || []).some((m) => academicosActivos.has(m.academico))) activos.add(p.id);
-  }
-  for (const k of datos.nodos.PalabraClave) {
-    if (filtroPalabras.has(k.id) || hayActivo(indices.academicosDePalabra.get(k.id))) activos.add(k.id);
-  }
-  for (const f of datos.nodos.Facultad) {
-    if (hayActivo(indices.academicosDeFacultad.get(f.id))) activos.add(f.id);
-  }
-
-  const expandidos = new Set();
-  if (seleccionado) {
-    const nodoSelect = estado.porId.get(seleccionado);
-    if (nodoSelect) {
-      if (nodoSelect.tipo === 'Academico') {
-        (nodoSelect.proyectos || []).forEach(p => expandidos.add(p));
-        (nodoSelect.palabrasClave || []).forEach(kw => expandidos.add(kw));
-      } else if (nodoSelect.tipo === 'Proyecto' || nodoSelect.tipo === 'PalabraClave') {
-        expandidos.add(nodoSelect.id);
-      }
-    }
-  }
-
-  // --- NUEVO: Lógica de Spotlight (Hover) ---
-  const focoHover = new Set();
-  if (hovered && estado.red) {
-    focoHover.add(hovered);
-    // Recupera automáticamente a todos los vecinos conectados
-    estado.red.getConnectedNodes(hovered).forEach(id => focoHover.add(id));
-  }
-
-  const cambiosNodos = [];
-  for (const nodo of estado.nodos.get()) {
-    const original = estado.porId.get(nodo.id);
-    let oculto = false;
-
-    if (original.tipo === 'Proyecto' || original.tipo === 'PalabraClave') {
-      oculto = true;
-      if (expandidos.has(nodo.id)) oculto = false;
-      if (original.tipo === 'PalabraClave' && filtroPalabras.has(nodo.id)) oculto = false;
-      if (original.tipo === 'Proyecto' && !vistaInterna && original.visibilidad === 'interna') oculto = true;
-    }
-
-    let atenuado = !activos.has(nodo.id);
-    let extratransparente = false;
-    
-    // Si hay un nodo en hover, y este nodo NO está conectado a él, lo atenuamos fuertemente
-    if (hovered && !focoHover.has(nodo.id)) {
-      atenuado = true;
-      extratransparente = true;
-    }
-
-    const estilo = estiloNodo(original, atenuado);
-    
-    // Forzar opacidad al 5% para lograr el efecto Spotlight agresivo
-    if (extratransparente) {
-      const cBase = colorBaseNodo(original);
-      estilo.color.background = rgba(cBase, 0.05);
-      if (estilo.color.border) estilo.color.border = rgba('#ffffff', 0.05);
-      estilo.font.color = rgba(original.tipo === 'PalabraClave' ? COLOR.texto2 : COLOR.texto, 0.05);
-      if (estilo.icon) estilo.icon.color = rgba(cBase, 0.05);
-    }
-
-    cambiosNodos.push({ id: nodo.id, hidden: oculto, ...estilo });
-  }
-  estado.nodos.update(cambiosNodos);
-
-  const cambiosAristas = estado.aristas.get().map((a) => {
-    let atenuado = !(activos.has(a.from) && activos.has(a.to));
-    let extratransparente = false;
-
-    if (hovered && (!focoHover.has(a.from) || !focoHover.has(a.to))) {
-      atenuado = true;
-      extratransparente = true;
-    }
-
-    const est = estiloArista(a, atenuado);
-    
-    // Las líneas desconectadas casi desaparecen (2% opacidad)
-    if (extratransparente) {
-      const eStyle = ESTILO_ARISTA[a.tipo] || ESTILO_ARISTA.TIENE_PALABRA_CLAVE;
-      est.color.color = rgba(eStyle.base, 0.02); 
-    }
-
-    return {
-      id: a.id,
-      hidden: a.tipo === 'POTENCIAL' && !vistaInterna,
-      ...est
-    };
-  });
-  estado.aristas.update(cambiosAristas);
-
-  const meta = document.getElementById('graphMeta');
-  if (meta) {
-    const total = datos.nodos.Academico.length;
-    const proyectosVisibles = datos.nodos.Proyecto.filter((p) => activos.has(p.id) && (vistaInterna || p.visibilidad !== 'interna')).length;
-    meta.textContent = academicosActivos.size === total
-      ? `${total} académicos · ${proyectosVisibles} proyectos · ${datos.nodos.Facultad.length} facultades`
-      : `${academicosActivos.size} de ${total} académicos · ${proyectosVisibles} proyectos relacionados`;
-  }
-}
-
-/* -----------------------------------------------------------------------------
- * 6. Ficha del académico (#perfil)
- * -------------------------------------------------------------------------- */
-
-function renderPerfil(idNodo) {
-  const cont = document.getElementById('perfilContenido');
-  const nodo = estado.porId.get(idNodo);
-  // Validar que sea Académico o Proyecto
-  if (!cont || !nodo || (nodo.tipo !== 'Academico' && nodo.tipo !== 'Proyecto')) return;
-  
-  estado.seleccionado = idNodo;
-  document.getElementById('perfil')?.classList.remove('is-empty');
-
-  if (nodo.tipo === 'Academico') {
-    const a = nodo;
-    const fac = estado.porId.get(a.facultad);
-    const colorFac = colorFacultad(a.facultad);
-    const colaboradores = estado.indices.colaboradores.get(a.id) || new Map();
-    const interfacultad = [...colaboradores.values()].filter((e) => e.interfacultad).length;
-    const lineasFin = new Map(estado.datos.catalogos.lineasFinanciamiento.map((l) => [l.id, l]));
-
-    const conexionesHTML = a.potencialesConexiones.length
-      ? a.potencialesConexiones.map((pc) => {
-          const otro = estado.porId.get(pc.academico);
-          const cOtro = colorFacultad(otro.facultad);
-          const via = pc.intermediarios[0] ? estado.porId.get(pc.intermediarios[0]) : null;
-          const extra = pc.intermediarios.length > 1 ? ` <span class="text-secondary">+${pc.intermediarios.length - 1}</span>` : '';
-          const pct = Math.round(pc.puntaje * 100);
-          return `
-            <button type="button" class="conn w-100 text-start mb-2" data-academico="${esc(otro.id)}"
-                    title="Ver ficha de ${esc(otro.nombre)}">
-              <div class="avatar" style="background:${rgba(cOtro, 0.12)};color:${cOtro};border-color:${cOtro}" aria-hidden="true">${esc(iniciales(otro.nombre))}</div>
-              <div class="flex-grow-1">
-                <div class="conn-name">${esc(otro.nombre)}</div>
-                <div class="conn-meta">${esc(etiquetaDe(otro.facultad))} · ${esc(otro.lineasInvestigacion.join(', '))}</div>
-                ${via ? `
-                <div class="path" aria-label="Ruta de conexión">
-                  <span class="node">${esc(a.etiqueta)}</span><i class="bi bi-arrow-right"></i>
-                  <span class="node">${esc(via.etiqueta)}</span>${extra}<i class="bi bi-arrow-right"></i>
-                  <span class="node">${esc(otro.etiqueta)}</span>
-                </div>` : ''}
-                <div class="d-flex justify-content-between align-items-center mt-2 gap-2" style="font-size:.75rem">
-                  <span>Comparten: ${pc.palabrasClaveCompartidas.map((k) => `<span class="chip py-0 px-2 m-0">${esc(etiquetaDe(k))}</span>`).join(' ')}</span>
-                  <span class="text-secondary text-nowrap">Afinidad ${pct}%</span>
-                </div>
-                <div class="affinity" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Afinidad"><div style="width:${pct}%"></div></div>
-              </div>
-            </button>`;
-        }).join('')
-      : '<p class="small text-secondary mb-0">No se detectan conexiones potenciales con los datos actuales.</p>';
-
-    const financiamientoHTML = a.coincidenciasFinanciamiento.length
-      ? a.coincidenciasFinanciamiento.map((c) => {
-          const l = lineasFin.get(c.linea);
-          if (!l) return '';
-          const nivel = c.nivel.toLowerCase();
-          const abierta = /abierta/i.test(l.estado);
-          return `
-            <div class="fund ${nivel}">
-              <div class="fund-top">
-                <div>
-                  <div class="fund-name">${esc(l.nombre)}</div>
-                  <div class="fund-inst">${esc(l.instrumento)} · ${esc(l.organismo)}</div>
-                </div>
-                <span class="lvl ${nivel}">${esc(c.nivel)}</span>
-              </div>
-              <div class="fund-foot">
-                <span class="kws"><i class="bi bi-check2"></i> ${esc(c.palabrasClaveCoincidentes.map(etiquetaDe).join(', '))}</span>
-                <span class="state"><i class="d" style="background:${abierta ? COLOR.proy : COLOR.kw}"></i> ${esc(l.estado)}</span>
-              </div>
-            </div>`;
-        }).join('')
-      : '<p class="small text-secondary mb-0">Sin coincidencias con las líneas registradas.</p>';
-
-    cont.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="side-label mb-0">Ficha del académico</span>
-        <button class="btn btn-sm btn-light" type="button" id="btnCerrarPerfil" aria-label="Cerrar ficha"><i class="bi bi-x-lg"></i></button>
-      </div>
-      <div class="profile-head">
-        <div class="avatar" style="background:${rgba(colorFac, 0.12)};color:${colorFac};border-color:${colorFac}" aria-hidden="true">${esc(iniciales(a.nombre))}</div>
-        <div>
-          <h2 id="perfilNombre">${esc(a.nombre)}</h2>
-          <div class="role mb-2">${esc(a.cargo)}</div>
-          <span class="fac-badge" style="background:${rgba(colorFac, 0.12)};color:${colorFac}"><i class="bi bi-building"></i> ${esc(fac?.nombre ?? a.facultad)}</span>
-        </div>
-      </div>
-      <div class="stats">
-        <div class="stat"><b>${a.proyectos.length}</b><span>Proyectos</span></div>
-        <div class="stat"><b>${colaboradores.size}</b><span>Colaboradores</span></div>
-        <div class="stat"><b>${interfacultad}</b><span>Interfacultad</span></div>
-      </div>
-      <section class="p-section">
-        <h3><i class="bi bi-bullseye"></i> Líneas de investigación</h3>
-        ${a.lineasInvestigacion.map((l) => `<div class="line-item"><i class="bi bi-dot fs-4" style="color:${colorFac}"></i> ${esc(l)}</div>`).join('')}
-      </section>
-      <section class="p-section">
-        <h3><i class="bi bi-tags"></i> Palabras clave</h3>
-        ${a.palabrasClave.map((k) => `<span class="chip">${esc(etiquetaDe(k))}</span>`).join('')}
-      </section>
-      <section class="p-section solo-interna">
-        <h3><i class="bi bi-share"></i> Potenciales conexiones (2do grado) <span class="tag-int">Interno</span></h3>
-        ${conexionesHTML}
-      </section>
-      <section class="p-section solo-interna">
-        <h3><i class="bi bi-cash-coin"></i> Coincidencias de financiamiento estratégico <span class="tag-int">Interno</span></h3>
-        ${financiamientoHTML}
-      </section>
-      <section class="p-section public-note">
-        <div class="alert small mb-0">
-          <i class="bi bi-info-circle me-1"></i>
-          ¿Quieres colaborar con ${a.cargo.startsWith('Profesora') ? 'esta investigadora' : 'este investigador'}? Escribe a la Dirección de Innovación y Transferencia.
-        </div>
-      </section>`;
-      
-  } else if (nodo.tipo === 'Proyecto') {
-    // --- NUEVA FICHA DE PROYECTO ---
-    const p = nodo;
-    const miembros = estado.indices.miembrosProyecto.get(p.id) || [];
-    
-    const integrantesHTML = miembros.map(m => {
-      const acad = estado.porId.get(m.academico);
-      if (!acad) return '';
-      const cAcad = colorFacultad(acad.facultad);
-      return `
-        <button type="button" class="conn w-100 text-start mb-2" data-academico="${esc(acad.id)}" title="Ver ficha de ${esc(acad.nombre)}">
-          <div class="avatar" style="background:${rgba(cAcad, 0.12)};color:${cAcad};border-color:${cAcad}" aria-hidden="true">${esc(iniciales(acad.nombre))}</div>
-          <div class="flex-grow-1">
-            <div class="conn-name">${esc(acad.nombre)}</div>
-            <div class="conn-meta">${esc(m.rol)} · ${esc(etiquetaDe(acad.facultad))}</div>
-          </div>
-        </button>`;
-    }).join('');
-
-    const colorEstado = p.estado.toLowerCase().includes('ejecución') ? COLOR.proy : (p.estado.toLowerCase().includes('finalizado') ? '#475569' : '#b08d3a');
-
-    cont.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="side-label mb-0">Ficha del proyecto</span>
-        <button class="btn btn-sm btn-light" type="button" id="btnCerrarPerfil" aria-label="Cerrar ficha"><i class="bi bi-x-lg"></i></button>
-      </div>
-      <div class="profile-head">
-        <div class="avatar" style="background:${rgba(COLOR.proy, 0.12)};color:${COLOR.proy};border-color:${COLOR.proy}" aria-hidden="true"><i class="bi bi-folder2-open"></i></div>
-        <div>
-          <h2 id="perfilNombre">${esc(p.etiqueta)}</h2>
-          <div class="role mb-2">${esc(p.instrumento)} · ${esc(p.organismo)}</div>
-          <span class="fac-badge" style="background:${rgba(COLOR.proy, 0.12)};color:${COLOR.proy}"><i class="bi bi-calendar3"></i> ${p.anioInicio} – ${p.anioTermino}</span>
-        </div>
-      </div>
-      <section class="p-section">
-        <h3 class="mb-2"><i class="bi bi-info-circle"></i> Título y Resumen</h3>
-        <p class="small text-body mb-2 fw-semibold" style="line-height: 1.4;">${esc(p.titulo)}</p>
-        <p class="small text-secondary mb-0" style="line-height: 1.4;">${esc(p.resumen)}</p>
-        <div class="mt-3">
-          <span class="state"><i class="d" style="background:${colorEstado}; width:8px; height:8px; border-radius:50%; display:inline-block;"></i> ${esc(p.estado)}</span>
-          ${p.visibilidad === 'interna' ? `<span class="badge bg-warning text-dark ms-2" style="font-size:0.6rem; background:#ffc107; padding:2px 4px; border-radius:3px;">INTERNO</span>` : ''}
-        </div>
-      </section>
-      <section class="p-section">
-        <h3><i class="bi bi-tags"></i> Palabras clave</h3>
-        ${p.palabrasClave.map((k) => `<span class="chip">${esc(etiquetaDe(k))}</span>`).join('')}
-      </section>
-      <section class="p-section">
-        <h3><i class="bi bi-people"></i> Equipo de Investigación</h3>
-        ${integrantesHTML || '<p class="small text-secondary mb-0">No hay integrantes registrados.</p>'}
-      </section>`;
-  }
-}
-
-/** Estado vacío de la ficha (al cerrarla). */
-function renderPerfilVacio() {
-  estado.seleccionado = null;
-  document.getElementById('perfil')?.classList.add('is-empty'); // en móvil oculta la hoja
-  const cont = document.getElementById('perfilContenido');
-  if (!cont) return;
-  cont.innerHTML = `
-    <div class="text-center text-secondary py-5 px-3">
-      <i class="bi bi-person-circle fs-1 d-block mb-2"></i>
-      <div class="fw-semibold text-body mb-1">Ningún académico seleccionado</div>
-      <div class="small">Haz clic en un nodo de la red o usa el buscador para ver su ficha.</div>
-    </div>`;
-}
-
-/** Selecciona un académico en la red, abre su ficha y (opcional) centra la vista. */
-function seleccionarAcademico(id, { enfocar = false } = {}) {
-  if (!estado.porId.has(id)) return;
-  estado.red.selectNodes([id]);
-  renderPerfil(id);
-  document.getElementById('perfil')?.scrollTo({ top: 0, behavior: 'smooth' });
-  
-  // Dispara la actualización visual (Revela proyectos)
-  aplicarFiltros(); 
-
-  if (enfocar) enfocarNodo(id);
-}
-
-/* -----------------------------------------------------------------------------
- * 7. Eventos de la interfaz
- * -------------------------------------------------------------------------- */
-
-/** Interruptor Vista Interna / Externa (funciona aunque los datos no carguen). */
-function iniciarInterruptorVista() {
-  const toggle = document.getElementById('toggleVista');
-  const titulo = document.getElementById('vtTitle');
-  const sub = document.getElementById('vtSub');
-  const aplicar = () => {
-    estado.vistaInterna = toggle.checked;
-    document.body.classList.toggle('vista-externa', !toggle.checked);
-    titulo.textContent = toggle.checked ? 'Vista Interna' : 'Vista Externa';
-    sub.textContent = toggle.checked ? 'Dirección de Innovación' : 'Público';
-    aplicarFiltros();
-  };
-  toggle.addEventListener('change', aplicar);
-  aplicar();
-}
-
-function iniciarFiltros() {
-  // Facultades (radio buttons)
-  document.querySelectorAll('input[name="filtroFacultad"]').forEach((radio) => {
-    radio.addEventListener('change', () => {
-      if (!radio.checked) return;
-      estado.filtroFacultad = radio.value; // "todas" | "fac-ing" | "fac-psi"
-      aplicarFiltros();
-    });
-  });
-
-  // Palabras clave (checkboxes; se combinan con O lógico entre sí)
-  const checks = document.querySelectorAll('.kw-list .btn-check');
-  checks.forEach((c) => c.addEventListener('change', () => {
-    c.checked ? estado.filtroPalabras.add(c.value) : estado.filtroPalabras.delete(c.value);
-    aplicarFiltros();
-  }));
-
-  document.getElementById('limpiarKw')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    checks.forEach((c) => (c.checked = false));
-    estado.filtroPalabras.clear();
-    aplicarFiltros();
-  });
-}
-
-function iniciarBuscador() {
-  const input = document.getElementById('buscador');
-  const form = input?.closest('form');
-  if (!form) return;
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const q = normalizar(input.value);
-    if (!q) return;
-    const campos = (n) => [n.nombre, n.etiqueta, n.titulo].filter(Boolean).map(normalizar);
-    const orden = ['Academico', 'Proyecto', 'PalabraClave', 'Facultad'];
-    const hallazgo = orden.flatMap((t) => estado.datos.nodos[t]).find((n) => campos(n).some((c) => c.includes(q)));
-
-    input.classList.toggle('is-invalid', !hallazgo);
-    if (!hallazgo) return;
-    
-    // NUEVO: Abre la ficha también si se busca un Proyecto desde la barra
-    if (hallazgo.tipo === 'Academico' || hallazgo.tipo === 'Proyecto') {
-      seleccionarAcademico(hallazgo.id, { enfocar: true });
-    } else {
-      estado.red.selectNodes([hallazgo.id]);
-      enfocarNodo(hallazgo.id);
+  document.addEventListener('click',e=>{
+    const target=e.target.closest('button,a'); if(!target) return;
+    if(target.classList.contains('skip-link')) {e.preventDefault();$('contenidoPrincipal').focus();return;}
+    if(target.dataset.nav) { e.preventDefault(); limpiarEstadoFiltros(); navegar(target.dataset.nav); }
+    else if(target.dataset.academico) {e.preventDefault();navegar('perfil/'+target.dataset.academico+(target.dataset.abrirRed?'/red':''));}
+    else if(target.dataset.proyecto) {e.preventDefault();if(proyectoVisible(estado.porId.get(target.dataset.proyecto))) navegar('proyecto/'+target.dataset.proyecto);}
+    else if(target.dataset.perfilTab) {e.preventDefault(); cambiarPanelPerfil(target.dataset.perfilTab);}
+    else if(target.dataset.facultad) {e.preventDefault();limpiarEstadoFiltros();estado.facultad=target.dataset.facultad;navegar('todos');}
+    else if(target.dataset.unidad) {e.preventDefault();limpiarEstadoFiltros();estado.unidad=target.dataset.unidad;navegar('todos');}
+    else if(target.dataset.palabra) {e.preventDefault();explorarPalabra(target.dataset.palabra);}
+    else if(target.id==='limpiarFiltros') {limpiarEstadoFiltros();renderDirectorio();}
+    else if(target.dataset.zoom&&estado.red) {
+      if(target.dataset.zoom==='fit') estado.red.fit({animation:false});
+      else estado.red.moveTo({scale:Math.max(.15,Math.min(4,estado.red.getScale()*(target.dataset.zoom==='in'?1.25:.8))),animation:false});
     }
   });
-  input.addEventListener('input', () => input.classList.remove('is-invalid'));
+  document.addEventListener('change',e=>{
+    const fields={filtroFacultad:'facultad',filtroPalabra:'palabra',filtroUnidad:'unidad',ordenResultados:'orden'};
+    if(fields[e.target.id]) {estado[fields[e.target.id]]=e.target.value; renderResultados();}
+    const graphFields={proyectosRed:'proyectosRed',temasRed:'temasRed',potencialesRed:'potencialesRed',circularRed:'circular'};
+    if(graphFields[e.target.id]) {estado[graphFields[e.target.id]]=e.target.checked;crearRed(estado.porId.get(estado.seleccionado));}
+  });
+  document.addEventListener('keydown',e=>{
+    if(!e.target.matches('[data-perfil-tab]')) return;
+    const tabs=[...document.querySelectorAll('[data-perfil-tab]')],i=tabs.indexOf(e.target);let next;
+    if(e.key==='ArrowRight') next=(i+1)%tabs.length;
+    if(e.key==='ArrowLeft') next=(i+tabs.length-1)%tabs.length;
+    if(e.key==='Home') next=0;
+    if(e.key==='End') next=tabs.length-1;
+    if(next!==undefined) {e.preventDefault();cambiarPanelPerfil(tabs[next].dataset.perfilTab,true);}
+  });
+  window.addEventListener('hashchange',()=>renderRuta(true));
+  // pushState de las pestañas también debe responder al botón Atrás.
+  window.addEventListener('popstate',()=>renderRuta());
 }
-
-function iniciarZoom() {
-  const animar = { duration: 300, easingFunction: 'easeInOutQuad' };
-  const zoom = (factor) => estado.red.moveTo({ scale: estado.red.getScale() * factor, animation: animar });
-  document.getElementById('btnZoomIn')?.addEventListener('click', () => zoom(1.25));
-  document.getElementById('btnZoomOut')?.addEventListener('click', () => zoom(0.8));
-  document.getElementById('btnFit')?.addEventListener('click', () => ajustarVista(estado.red));
-}
-
-function iniciarEventosRed() {
-  estado.red.on('selectNode', (params) => {
-    const id = params.nodes[0];
-    const tipo = estado.porId.get(id)?.tipo;
-    if (tipo === 'Academico' || tipo === 'Proyecto') {
-      seleccionarAcademico(id, { enfocar: window.matchMedia('(max-width: 991.98px)').matches });
-    } else {
-      estado.seleccionado = id;
-      aplicarFiltros(); 
-    }
-  });
-
-  estado.red.on('deselectNode', () => {
-    estado.seleccionado = null;
-    renderPerfilVacio();
-    aplicarFiltros();
-  });
-
-  // --- NUEVO: Eventos para encender/apagar el Spotlight ---
-  estado.red.on('hoverNode', (params) => {
-    estado.hovered = params.node;
-    aplicarFiltros();
-  });
-  
-  estado.red.on('blurNode', () => {
-    estado.hovered = null;
-    aplicarFiltros();
-  });
-
-  document.getElementById('perfil').addEventListener('click', (e) => {
-    const conexion = e.target.closest('[data-academico]');
-    if (conexion) {
-      seleccionarAcademico(conexion.dataset.academico, { enfocar: true });
-      return;
-    }
-    if (e.target.closest('#btnCerrarPerfil')) {
-      estado.red.unselectAll();
-      estado.seleccionado = null;
-      renderPerfilVacio();
-      aplicarFiltros(); 
-    }
-  });
-}
-
-/** Mensaje dentro del contenedor del grafo si algo falla. */
-function mostrarError(error) {
-  console.error(error);
-  const ph = document.getElementById('graph-placeholder');
-  if (!ph) return;
-  const esArchivoLocal = location.protocol === 'file:';
-  ph.innerHTML = `
-    <i class="bi bi-exclamation-triangle fs-1 text-warning mb-2"></i>
-    <div class="ph-title">No se pudo cargar la red</div>
-    <div class="ph-sub">${esArchivoLocal
-      ? 'Abriste el archivo con doble clic. Los navegadores bloquean <code>fetch()</code> en <code>file://</code>: sirve la carpeta con un servidor local (por ejemplo, Live Server o <code>python -m http.server</code>).'
-      : esc(error.message)}</div>`;
-}
-
-/* -----------------------------------------------------------------------------
- * 8. Arranque
- * -------------------------------------------------------------------------- */
-
-// --- NUEVO: Animación de trayectorias punteadas (Flujo de información) ---
-// --- Animación global de redibujado ---
-let dashOffset = 0;
-function iniciarAnimaciones(red) {
-  red.on("beforeDrawing", (ctx) => {
-    ctx.lineDashOffset = dashOffset;
-  });
-  
-  function animar() {
-    // Si estamos en vista interna, deslizamos el patrón de la línea punteada
-    if (estado.vistaInterna) {
-      dashOffset -= 0.5; 
-    }
-    // Forzamos el redibujado constante para que el "Latido" y la "Respiración" funcionen siempre
-    red.redraw();
-    requestAnimationFrame(animar);
-  }
-  animar();
-}
-
 async function iniciarApp() {
-  iniciarInterruptorVista();
-
-  if (typeof vis === 'undefined') {
-    mostrarError(new Error('No se cargó la librería vis-network. Revisa la etiqueta <script> del CDN.'));
-    return;
-  }
-
   try {
-    const datos = await cargarDatos();
-    estado.datos = datos;
-    for (const lista of Object.values(datos.nodos)) lista.forEach((n) => estado.porId.set(n.id, n));
-    estado.indices = construirIndices(datos);
-
-    estado.nodos = new vis.DataSet(mapearNodos(datos, estado.indices));
-    estado.aristas = new vis.DataSet(mapearAristas(datos));
-
-    const contenedor = document.getElementById('network-graph');
-    document.getElementById('graph-placeholder')?.remove(); 
-
-    const superpuestos = [...contenedor.children];
-    superpuestos.forEach((el) => el.remove());
-    estado.red = crearRed(contenedor, estado.nodos, estado.aristas);
-    
-    // --- NUEVO: Inicia los efectos de canvas y el motor de animación ---
-    iniciarEfectosCanvas(estado.red);
-    iniciarAnimaciones(estado.red);
-    // ------------------------------------------
-
-    superpuestos.forEach((el) => contenedor.appendChild(el));
-
-    iniciarFiltros();
-    iniciarBuscador();
-    iniciarZoom();
-    iniciarEventosRed();
-    aplicarFiltros();
-
-    document.fonts.ready.then(() => estado.red.redraw());
-
-    const primero = datos.nodos.Academico[0]?.id;
-    if (primero && window.matchMedia('(min-width: 992px)').matches) seleccionarAcademico(primero);
-    else renderPerfilVacio();
-  } catch (error) {
-    mostrarError(error);
+    const respuesta=await fetch(RUTA_DATOS,{cache:'no-store'});
+    if(!respuesta.ok) throw new Error('No se pudieron cargar los datos (HTTP '+respuesta.status+').');
+    const datos=await respuesta.json();
+    if(!datos.nodos?.Academico||!datos.nodos?.Proyecto||!datos.nodos?.Facultad||!datos.nodos?.PalabraClave||!Array.isArray(datos.enlaces)) throw new Error('El archivo de datos no tiene la estructura esperada.');
+    estado.datos=datos;
+    Object.values(datos.nodos).forEach(list=>list.forEach(n=>estado.porId.set(n.id,n)));
+    (datos.catalogos?.unidades||[]).forEach(u=>estado.unidades.set(u.id,u));
+    estado.indices=construirIndices(datos);
+    estado.vistaInterna=$('toggleVista').checked;
+    $('vistaLabel').textContent=estado.vistaInterna?'Vista interna':'Vista pública';
+    $('fechaDatos').textContent=datos.metadata?.fechaGeneracion || 'No registrada';
+    $('mensajeCarga').hidden=true;
+    eventos(); renderRuta();
+  } catch(error) {
+    console.error(error);
+    $('mensajeCarga').innerHTML=empty(location.protocol==='file:'?'Abre la carpeta con un servidor local (Live Server o un servidor HTTP) para poder cargar el JSON.':error.message,'No se pudo cargar el portal');
   }
 }
-
-document.addEventListener('DOMContentLoaded', iniciarApp);
+document.addEventListener('DOMContentLoaded',iniciarApp);
