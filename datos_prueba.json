@@ -1,0 +1,1295 @@
+{
+  "metadata": {
+    "nombre": "Ecosistema I+D+i UAH — datos de prueba",
+    "version": "0.1.0",
+    "fechaGeneracion": "2026-09-26",
+    "datosFicticios": true,
+    "advertencia": "Todos los académicos, proyectos y líneas de financiamiento son inventados para la maqueta. No representan personas ni convocatorias reales.",
+    "alcancePiloto": [
+      "fac-ing",
+      "fac-psi"
+    ],
+    "tiposNodo": [
+      "Academico",
+      "Proyecto",
+      "Facultad",
+      "PalabraClave"
+    ],
+    "tiposEnlace": {
+      "PERTENECE_A": {
+        "desde": "Academico",
+        "hacia": "Facultad",
+        "dirigido": true
+      },
+      "INVESTIGA_EN": {
+        "desde": "Academico",
+        "hacia": "Proyecto",
+        "dirigido": true,
+        "atributos": [
+          "rol"
+        ]
+      },
+      "COLABORA_CON": {
+        "desde": "Academico",
+        "hacia": "Academico",
+        "dirigido": false,
+        "atributos": [
+          "peso",
+          "proyectosCompartidos",
+          "publicacionesConjuntas",
+          "origen",
+          "interfacultad"
+        ]
+      },
+      "TIENE_PALABRA_CLAVE": {
+        "desde": "Academico",
+        "hacia": "PalabraClave",
+        "dirigido": true
+      }
+    }
+  },
+  "nodos": {
+    "Academico": [
+      {
+        "id": "acad-01",
+        "tipo": "Academico",
+        "etiqueta": "V. Rojas",
+        "nombre": "Valentina Rojas Fuentes",
+        "cargo": "Profesora asociada",
+        "facultad": "fac-ing",
+        "lineasInvestigacion": [
+          "Ciencia de datos",
+          "Ciudades inteligentes"
+        ],
+        "palabrasClave": [
+          "kw-analitica",
+          "kw-movilidad",
+          "kw-ia",
+          "kw-bienestar"
+        ],
+        "proyectos": [
+          "proy-01",
+          "proy-03"
+        ],
+        "potencialesConexiones": [
+          {
+            "academico": "acad-06",
+            "palabrasClaveCompartidas": [
+              "kw-bienestar"
+            ],
+            "intermediarios": [
+              "acad-03"
+            ],
+            "grado": 2,
+            "puntaje": 0.5,
+            "motivo": "Comparten bienestar y tienen 1 colaborador en común"
+          }
+        ],
+        "coincidenciasFinanciamiento": [
+          {
+            "linea": "fin-01",
+            "nivel": "Alta",
+            "palabrasClaveCoincidentes": [
+              "kw-bienestar",
+              "kw-ia"
+            ]
+          },
+          {
+            "linea": "fin-04",
+            "nivel": "Alta",
+            "palabrasClaveCoincidentes": [
+              "kw-analitica",
+              "kw-movilidad"
+            ]
+          },
+          {
+            "linea": "fin-03",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-ia"
+            ]
+          },
+          {
+            "linea": "fin-05",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-analitica"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "acad-02",
+        "tipo": "Academico",
+        "etiqueta": "M. Soto",
+        "nombre": "Matías Soto Carrasco",
+        "cargo": "Profesor asistente",
+        "facultad": "fac-ing",
+        "lineasInvestigacion": [
+          "Sistemas de información",
+          "Transformación digital del sector público"
+        ],
+        "palabrasClave": [
+          "kw-gobdigital",
+          "kw-analitica",
+          "kw-comunidades"
+        ],
+        "proyectos": [
+          "proy-03"
+        ],
+        "potencialesConexiones": [
+          {
+            "academico": "acad-08",
+            "palabrasClaveCompartidas": [
+              "kw-comunidades"
+            ],
+            "intermediarios": [
+              "acad-01",
+              "acad-04",
+              "acad-05"
+            ],
+            "grado": 2,
+            "puntaje": 0.9,
+            "motivo": "Comparten comunidades y tienen 3 colaboradores en común"
+          },
+          {
+            "academico": "acad-03",
+            "palabrasClaveCompartidas": [
+              "kw-analitica"
+            ],
+            "intermediarios": [
+              "acad-01"
+            ],
+            "grado": 2,
+            "puntaje": 0.5,
+            "motivo": "Comparten analítica de datos y tienen 1 colaborador en común"
+          }
+        ],
+        "coincidenciasFinanciamiento": [
+          {
+            "linea": "fin-05",
+            "nivel": "Alta",
+            "palabrasClaveCoincidentes": [
+              "kw-analitica",
+              "kw-comunidades",
+              "kw-gobdigital"
+            ]
+          },
+          {
+            "linea": "fin-02",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-comunidades"
+            ]
+          },
+          {
+            "linea": "fin-04",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-analitica"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "acad-03",
+        "tipo": "Academico",
+        "etiqueta": "C. Herrera",
+        "nombre": "Camila Herrera Muñoz",
+        "cargo": "Profesora asistente",
+        "facultad": "fac-ing",
+        "lineasInvestigacion": [
+          "Inteligencia artificial aplicada",
+          "Tecnologías para la educación"
+        ],
+        "palabrasClave": [
+          "kw-ia",
+          "kw-educacion",
+          "kw-saludmental",
+          "kw-analitica"
+        ],
+        "proyectos": [
+          "proy-02"
+        ],
+        "potencialesConexiones": [
+          {
+            "academico": "acad-02",
+            "palabrasClaveCompartidas": [
+              "kw-analitica"
+            ],
+            "intermediarios": [
+              "acad-01"
+            ],
+            "grado": 2,
+            "puntaje": 0.5,
+            "motivo": "Comparten analítica de datos y tienen 1 colaborador en común"
+          }
+        ],
+        "coincidenciasFinanciamiento": [
+          {
+            "linea": "fin-01",
+            "nivel": "Alta",
+            "palabrasClaveCoincidentes": [
+              "kw-ia",
+              "kw-saludmental"
+            ]
+          },
+          {
+            "linea": "fin-03",
+            "nivel": "Alta",
+            "palabrasClaveCoincidentes": [
+              "kw-educacion",
+              "kw-ia"
+            ]
+          },
+          {
+            "linea": "fin-04",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-analitica"
+            ]
+          },
+          {
+            "linea": "fin-05",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-analitica"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "acad-04",
+        "tipo": "Academico",
+        "etiqueta": "D. Valenzuela",
+        "nombre": "Diego Valenzuela Tapia",
+        "cargo": "Profesor titular",
+        "facultad": "fac-ing",
+        "lineasInvestigacion": [
+          "Investigación de operaciones",
+          "Logística urbana"
+        ],
+        "palabrasClave": [
+          "kw-optimizacion",
+          "kw-movilidad",
+          "kw-gobdigital",
+          "kw-territorio"
+        ],
+        "proyectos": [
+          "proy-01"
+        ],
+        "potencialesConexiones": [
+          {
+            "academico": "acad-05",
+            "palabrasClaveCompartidas": [
+              "kw-territorio"
+            ],
+            "intermediarios": [
+              "acad-01",
+              "acad-02",
+              "acad-08"
+            ],
+            "grado": 2,
+            "puntaje": 0.9,
+            "motivo": "Comparten territorio y tienen 3 colaboradores en común"
+          }
+        ],
+        "coincidenciasFinanciamiento": [
+          {
+            "linea": "fin-04",
+            "nivel": "Alta",
+            "palabrasClaveCoincidentes": [
+              "kw-movilidad",
+              "kw-optimizacion"
+            ]
+          },
+          {
+            "linea": "fin-02",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-territorio"
+            ]
+          },
+          {
+            "linea": "fin-05",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-gobdigital"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "acad-05",
+        "tipo": "Academico",
+        "etiqueta": "I. Pizarro",
+        "nombre": "Ignacio Pizarro Vega",
+        "cargo": "Profesor asociado",
+        "facultad": "fac-psi",
+        "lineasInvestigacion": [
+          "Psicología comunitaria",
+          "Intervención territorial"
+        ],
+        "palabrasClave": [
+          "kw-comunidades",
+          "kw-territorio",
+          "kw-bienestar"
+        ],
+        "proyectos": [
+          "proy-03",
+          "proy-04"
+        ],
+        "potencialesConexiones": [
+          {
+            "academico": "acad-04",
+            "palabrasClaveCompartidas": [
+              "kw-territorio"
+            ],
+            "intermediarios": [
+              "acad-01",
+              "acad-02",
+              "acad-08"
+            ],
+            "grado": 2,
+            "puntaje": 0.9,
+            "motivo": "Comparten territorio y tienen 3 colaboradores en común"
+          },
+          {
+            "academico": "acad-06",
+            "palabrasClaveCompartidas": [
+              "kw-bienestar"
+            ],
+            "intermediarios": [
+              "acad-07"
+            ],
+            "grado": 2,
+            "puntaje": 0.5,
+            "motivo": "Comparten bienestar y tienen 1 colaborador en común"
+          }
+        ],
+        "coincidenciasFinanciamiento": [
+          {
+            "linea": "fin-02",
+            "nivel": "Alta",
+            "palabrasClaveCoincidentes": [
+              "kw-comunidades",
+              "kw-territorio"
+            ]
+          },
+          {
+            "linea": "fin-01",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-bienestar"
+            ]
+          },
+          {
+            "linea": "fin-05",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-comunidades"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "acad-06",
+        "tipo": "Academico",
+        "etiqueta": "F. Castillo",
+        "nombre": "Fernanda Castillo Araya",
+        "cargo": "Profesora asociada",
+        "facultad": "fac-psi",
+        "lineasInvestigacion": [
+          "Salud mental",
+          "Bienestar digital"
+        ],
+        "palabrasClave": [
+          "kw-saludmental",
+          "kw-bienestar",
+          "kw-infancia"
+        ],
+        "proyectos": [
+          "proy-02"
+        ],
+        "potencialesConexiones": [
+          {
+            "academico": "acad-01",
+            "palabrasClaveCompartidas": [
+              "kw-bienestar"
+            ],
+            "intermediarios": [
+              "acad-03"
+            ],
+            "grado": 2,
+            "puntaje": 0.5,
+            "motivo": "Comparten bienestar y tienen 1 colaborador en común"
+          },
+          {
+            "academico": "acad-05",
+            "palabrasClaveCompartidas": [
+              "kw-bienestar"
+            ],
+            "intermediarios": [
+              "acad-07"
+            ],
+            "grado": 2,
+            "puntaje": 0.5,
+            "motivo": "Comparten bienestar y tienen 1 colaborador en común"
+          }
+        ],
+        "coincidenciasFinanciamiento": [
+          {
+            "linea": "fin-01",
+            "nivel": "Alta",
+            "palabrasClaveCoincidentes": [
+              "kw-bienestar",
+              "kw-saludmental"
+            ]
+          },
+          {
+            "linea": "fin-03",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-infancia"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "acad-07",
+        "tipo": "Academico",
+        "etiqueta": "T. Navarro",
+        "nombre": "Tomás Navarro Reyes",
+        "cargo": "Profesor asistente",
+        "facultad": "fac-psi",
+        "lineasInvestigacion": [
+          "Psicología educacional",
+          "Procesos de aprendizaje"
+        ],
+        "palabrasClave": [
+          "kw-educacion",
+          "kw-infancia",
+          "kw-migracion"
+        ],
+        "proyectos": [
+          "proy-02",
+          "proy-04"
+        ],
+        "potencialesConexiones": [],
+        "coincidenciasFinanciamiento": [
+          {
+            "linea": "fin-03",
+            "nivel": "Alta",
+            "palabrasClaveCoincidentes": [
+              "kw-educacion",
+              "kw-infancia"
+            ]
+          },
+          {
+            "linea": "fin-02",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-migracion"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "acad-08",
+        "tipo": "Academico",
+        "etiqueta": "J. Morales",
+        "nombre": "Josefa Morales Díaz",
+        "cargo": "Profesora titular",
+        "facultad": "fac-psi",
+        "lineasInvestigacion": [
+          "Psicología social",
+          "Migración y convivencia"
+        ],
+        "palabrasClave": [
+          "kw-migracion",
+          "kw-territorio",
+          "kw-comunidades"
+        ],
+        "proyectos": [
+          "proy-01",
+          "proy-04"
+        ],
+        "potencialesConexiones": [
+          {
+            "academico": "acad-02",
+            "palabrasClaveCompartidas": [
+              "kw-comunidades"
+            ],
+            "intermediarios": [
+              "acad-01",
+              "acad-04",
+              "acad-05"
+            ],
+            "grado": 2,
+            "puntaje": 0.9,
+            "motivo": "Comparten comunidades y tienen 3 colaboradores en común"
+          }
+        ],
+        "coincidenciasFinanciamiento": [
+          {
+            "linea": "fin-02",
+            "nivel": "Alta",
+            "palabrasClaveCoincidentes": [
+              "kw-comunidades",
+              "kw-migracion",
+              "kw-territorio"
+            ]
+          },
+          {
+            "linea": "fin-05",
+            "nivel": "Media",
+            "palabrasClaveCoincidentes": [
+              "kw-comunidades"
+            ]
+          }
+        ]
+      }
+    ],
+    "Proyecto": [
+      {
+        "id": "proy-01",
+        "tipo": "Proyecto",
+        "etiqueta": "Observatorio de movilidad",
+        "titulo": "Observatorio de movilidad urbana y bienestar en comunas de Santiago",
+        "instrumento": "Fondecyt Regular",
+        "organismo": "ANID",
+        "anioInicio": 2024,
+        "anioTermino": 2027,
+        "estado": "En ejecución",
+        "visibilidad": "publica",
+        "investigadorResponsable": "acad-01",
+        "facultades": [
+          "fac-ing",
+          "fac-psi"
+        ],
+        "palabrasClave": [
+          "kw-movilidad",
+          "kw-analitica",
+          "kw-territorio",
+          "kw-bienestar"
+        ],
+        "resumen": "Integra datos de desplazamientos con indicadores de bienestar comunitario para orientar políticas locales de movilidad."
+      },
+      {
+        "id": "proy-02",
+        "tipo": "Proyecto",
+        "etiqueta": "Asistente de bienestar estudiantil",
+        "titulo": "Asistente conversacional para la detección temprana de malestar psicológico en estudiantes secundarios",
+        "instrumento": "FONDEF IDeA I+D",
+        "organismo": "ANID",
+        "anioInicio": 2025,
+        "anioTermino": 2027,
+        "estado": "En ejecución",
+        "visibilidad": "publica",
+        "investigadorResponsable": "acad-03",
+        "facultades": [
+          "fac-ing",
+          "fac-psi"
+        ],
+        "palabrasClave": [
+          "kw-ia",
+          "kw-saludmental",
+          "kw-educacion",
+          "kw-infancia"
+        ],
+        "resumen": "Prototipo de IA que apoya a equipos de convivencia escolar a identificar señales tempranas de malestar."
+      },
+      {
+        "id": "proy-03",
+        "tipo": "Proyecto",
+        "etiqueta": "Datos para programas municipales",
+        "titulo": "Plataforma de datos para la gestión de programas sociales municipales",
+        "instrumento": "Fondecyt de Iniciación",
+        "organismo": "ANID",
+        "anioInicio": 2026,
+        "anioTermino": 2028,
+        "estado": "En formulación",
+        "visibilidad": "interna",
+        "investigadorResponsable": "acad-02",
+        "facultades": [
+          "fac-ing",
+          "fac-psi"
+        ],
+        "palabrasClave": [
+          "kw-gobdigital",
+          "kw-analitica",
+          "kw-comunidades"
+        ],
+        "resumen": "Modelo de datos y tablero para que municipios hagan seguimiento de sus programas comunitarios."
+      },
+      {
+        "id": "proy-04",
+        "tipo": "Proyecto",
+        "etiqueta": "Convivencia escolar y migración",
+        "titulo": "Aprendizaje y convivencia escolar en contextos de migración reciente",
+        "instrumento": "Fondecyt Regular",
+        "organismo": "ANID",
+        "anioInicio": 2023,
+        "anioTermino": 2026,
+        "estado": "Finalizado",
+        "visibilidad": "publica",
+        "investigadorResponsable": "acad-07",
+        "facultades": [
+          "fac-psi"
+        ],
+        "palabrasClave": [
+          "kw-educacion",
+          "kw-migracion",
+          "kw-infancia",
+          "kw-comunidades"
+        ],
+        "resumen": "Estudio mixto sobre trayectorias de aprendizaje de estudiantes migrantes y prácticas de inclusión."
+      }
+    ],
+    "Facultad": [
+      {
+        "id": "fac-ing",
+        "tipo": "Facultad",
+        "etiqueta": "Ingeniería",
+        "nombre": "Facultad de Ingeniería",
+        "sigla": "ING"
+      },
+      {
+        "id": "fac-psi",
+        "tipo": "Facultad",
+        "etiqueta": "Psicología",
+        "nombre": "Facultad de Psicología",
+        "sigla": "PSI"
+      }
+    ],
+    "PalabraClave": [
+      {
+        "id": "kw-analitica",
+        "tipo": "PalabraClave",
+        "etiqueta": "Analítica de datos"
+      },
+      {
+        "id": "kw-ia",
+        "tipo": "PalabraClave",
+        "etiqueta": "Inteligencia artificial"
+      },
+      {
+        "id": "kw-movilidad",
+        "tipo": "PalabraClave",
+        "etiqueta": "Movilidad urbana"
+      },
+      {
+        "id": "kw-optimizacion",
+        "tipo": "PalabraClave",
+        "etiqueta": "Optimización"
+      },
+      {
+        "id": "kw-gobdigital",
+        "tipo": "PalabraClave",
+        "etiqueta": "Gobierno digital"
+      },
+      {
+        "id": "kw-territorio",
+        "tipo": "PalabraClave",
+        "etiqueta": "Territorio"
+      },
+      {
+        "id": "kw-comunidades",
+        "tipo": "PalabraClave",
+        "etiqueta": "Comunidades"
+      },
+      {
+        "id": "kw-saludmental",
+        "tipo": "PalabraClave",
+        "etiqueta": "Salud mental"
+      },
+      {
+        "id": "kw-bienestar",
+        "tipo": "PalabraClave",
+        "etiqueta": "Bienestar"
+      },
+      {
+        "id": "kw-educacion",
+        "tipo": "PalabraClave",
+        "etiqueta": "Educación"
+      },
+      {
+        "id": "kw-infancia",
+        "tipo": "PalabraClave",
+        "etiqueta": "Infancia y adolescencia"
+      },
+      {
+        "id": "kw-migracion",
+        "tipo": "PalabraClave",
+        "etiqueta": "Migración"
+      }
+    ]
+  },
+  "catalogos": {
+    "lineasFinanciamiento": [
+      {
+        "id": "fin-01",
+        "nombre": "Tecnologías para la salud mental",
+        "instrumento": "FONDEF IDeA I+D",
+        "organismo": "ANID",
+        "palabrasClave": [
+          "kw-saludmental",
+          "kw-ia",
+          "kw-bienestar"
+        ],
+        "estado": "Convocatoria abierta"
+      },
+      {
+        "id": "fin-02",
+        "nombre": "Territorio y cohesión social",
+        "instrumento": "Anillos de Investigación en Ciencias Sociales",
+        "organismo": "ANID",
+        "palabrasClave": [
+          "kw-territorio",
+          "kw-comunidades",
+          "kw-migracion"
+        ],
+        "estado": "Próxima convocatoria"
+      },
+      {
+        "id": "fin-03",
+        "nombre": "Educación y tecnologías del aprendizaje",
+        "instrumento": "FONDEF IDeA I+D",
+        "organismo": "ANID",
+        "palabrasClave": [
+          "kw-educacion",
+          "kw-ia",
+          "kw-infancia"
+        ],
+        "estado": "Convocatoria abierta"
+      },
+      {
+        "id": "fin-04",
+        "nombre": "Movilidad y ciudades sostenibles",
+        "instrumento": "Fondo de Innovación para la Competitividad (FIC-R)",
+        "organismo": "Gobierno Regional Metropolitano",
+        "palabrasClave": [
+          "kw-movilidad",
+          "kw-analitica",
+          "kw-optimizacion"
+        ],
+        "estado": "Próxima convocatoria"
+      },
+      {
+        "id": "fin-05",
+        "nombre": "Estado y transformación digital",
+        "instrumento": "Fondecyt de Iniciación",
+        "organismo": "ANID",
+        "palabrasClave": [
+          "kw-gobdigital",
+          "kw-analitica",
+          "kw-comunidades"
+        ],
+        "estado": "Convocatoria abierta"
+      }
+    ]
+  },
+  "enlaces": [
+    {
+      "id": "e001",
+      "source": "acad-01",
+      "target": "fac-ing",
+      "tipo": "PERTENECE_A"
+    },
+    {
+      "id": "e002",
+      "source": "acad-02",
+      "target": "fac-ing",
+      "tipo": "PERTENECE_A"
+    },
+    {
+      "id": "e003",
+      "source": "acad-03",
+      "target": "fac-ing",
+      "tipo": "PERTENECE_A"
+    },
+    {
+      "id": "e004",
+      "source": "acad-04",
+      "target": "fac-ing",
+      "tipo": "PERTENECE_A"
+    },
+    {
+      "id": "e005",
+      "source": "acad-05",
+      "target": "fac-psi",
+      "tipo": "PERTENECE_A"
+    },
+    {
+      "id": "e006",
+      "source": "acad-06",
+      "target": "fac-psi",
+      "tipo": "PERTENECE_A"
+    },
+    {
+      "id": "e007",
+      "source": "acad-07",
+      "target": "fac-psi",
+      "tipo": "PERTENECE_A"
+    },
+    {
+      "id": "e008",
+      "source": "acad-08",
+      "target": "fac-psi",
+      "tipo": "PERTENECE_A"
+    },
+    {
+      "id": "e009",
+      "source": "acad-01",
+      "target": "proy-01",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Investigadora responsable"
+    },
+    {
+      "id": "e010",
+      "source": "acad-04",
+      "target": "proy-01",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Coinvestigador"
+    },
+    {
+      "id": "e011",
+      "source": "acad-08",
+      "target": "proy-01",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Coinvestigadora"
+    },
+    {
+      "id": "e012",
+      "source": "acad-03",
+      "target": "proy-02",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Investigadora responsable"
+    },
+    {
+      "id": "e013",
+      "source": "acad-06",
+      "target": "proy-02",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Coinvestigadora"
+    },
+    {
+      "id": "e014",
+      "source": "acad-07",
+      "target": "proy-02",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Coinvestigador"
+    },
+    {
+      "id": "e015",
+      "source": "acad-02",
+      "target": "proy-03",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Investigador responsable"
+    },
+    {
+      "id": "e016",
+      "source": "acad-01",
+      "target": "proy-03",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Coinvestigadora"
+    },
+    {
+      "id": "e017",
+      "source": "acad-05",
+      "target": "proy-03",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Coinvestigador"
+    },
+    {
+      "id": "e018",
+      "source": "acad-07",
+      "target": "proy-04",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Investigador responsable"
+    },
+    {
+      "id": "e019",
+      "source": "acad-08",
+      "target": "proy-04",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Coinvestigadora"
+    },
+    {
+      "id": "e020",
+      "source": "acad-05",
+      "target": "proy-04",
+      "tipo": "INVESTIGA_EN",
+      "rol": "Coinvestigador"
+    },
+    {
+      "id": "e021",
+      "source": "acad-01",
+      "target": "acad-02",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [
+        "proy-03"
+      ],
+      "publicacionesConjuntas": 0,
+      "origen": [
+        "proyecto"
+      ],
+      "interfacultad": false
+    },
+    {
+      "id": "e022",
+      "source": "acad-01",
+      "target": "acad-03",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [],
+      "publicacionesConjuntas": 1,
+      "origen": [
+        "coautoria"
+      ],
+      "interfacultad": false
+    },
+    {
+      "id": "e023",
+      "source": "acad-01",
+      "target": "acad-04",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [
+        "proy-01"
+      ],
+      "publicacionesConjuntas": 0,
+      "origen": [
+        "proyecto"
+      ],
+      "interfacultad": false
+    },
+    {
+      "id": "e024",
+      "source": "acad-01",
+      "target": "acad-05",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [
+        "proy-03"
+      ],
+      "publicacionesConjuntas": 0,
+      "origen": [
+        "proyecto"
+      ],
+      "interfacultad": true
+    },
+    {
+      "id": "e025",
+      "source": "acad-01",
+      "target": "acad-08",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [
+        "proy-01"
+      ],
+      "publicacionesConjuntas": 0,
+      "origen": [
+        "proyecto"
+      ],
+      "interfacultad": true
+    },
+    {
+      "id": "e026",
+      "source": "acad-02",
+      "target": "acad-04",
+      "tipo": "COLABORA_CON",
+      "peso": 2,
+      "proyectosCompartidos": [],
+      "publicacionesConjuntas": 2,
+      "origen": [
+        "coautoria"
+      ],
+      "interfacultad": false
+    },
+    {
+      "id": "e027",
+      "source": "acad-02",
+      "target": "acad-05",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [
+        "proy-03"
+      ],
+      "publicacionesConjuntas": 0,
+      "origen": [
+        "proyecto"
+      ],
+      "interfacultad": true
+    },
+    {
+      "id": "e028",
+      "source": "acad-03",
+      "target": "acad-06",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [
+        "proy-02"
+      ],
+      "publicacionesConjuntas": 0,
+      "origen": [
+        "proyecto"
+      ],
+      "interfacultad": true
+    },
+    {
+      "id": "e029",
+      "source": "acad-03",
+      "target": "acad-07",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [
+        "proy-02"
+      ],
+      "publicacionesConjuntas": 0,
+      "origen": [
+        "proyecto"
+      ],
+      "interfacultad": true
+    },
+    {
+      "id": "e030",
+      "source": "acad-04",
+      "target": "acad-08",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [
+        "proy-01"
+      ],
+      "publicacionesConjuntas": 0,
+      "origen": [
+        "proyecto"
+      ],
+      "interfacultad": true
+    },
+    {
+      "id": "e031",
+      "source": "acad-05",
+      "target": "acad-07",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [
+        "proy-04"
+      ],
+      "publicacionesConjuntas": 0,
+      "origen": [
+        "proyecto"
+      ],
+      "interfacultad": false
+    },
+    {
+      "id": "e032",
+      "source": "acad-05",
+      "target": "acad-08",
+      "tipo": "COLABORA_CON",
+      "peso": 2,
+      "proyectosCompartidos": [
+        "proy-04"
+      ],
+      "publicacionesConjuntas": 1,
+      "origen": [
+        "proyecto",
+        "coautoria"
+      ],
+      "interfacultad": false
+    },
+    {
+      "id": "e033",
+      "source": "acad-06",
+      "target": "acad-07",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [
+        "proy-02"
+      ],
+      "publicacionesConjuntas": 0,
+      "origen": [
+        "proyecto"
+      ],
+      "interfacultad": false
+    },
+    {
+      "id": "e034",
+      "source": "acad-07",
+      "target": "acad-08",
+      "tipo": "COLABORA_CON",
+      "peso": 1,
+      "proyectosCompartidos": [
+        "proy-04"
+      ],
+      "publicacionesConjuntas": 0,
+      "origen": [
+        "proyecto"
+      ],
+      "interfacultad": false
+    },
+    {
+      "id": "e035",
+      "source": "acad-01",
+      "target": "kw-analitica",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e036",
+      "source": "acad-01",
+      "target": "kw-movilidad",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e037",
+      "source": "acad-01",
+      "target": "kw-ia",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e038",
+      "source": "acad-01",
+      "target": "kw-bienestar",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e039",
+      "source": "acad-02",
+      "target": "kw-gobdigital",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e040",
+      "source": "acad-02",
+      "target": "kw-analitica",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e041",
+      "source": "acad-02",
+      "target": "kw-comunidades",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e042",
+      "source": "acad-03",
+      "target": "kw-ia",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e043",
+      "source": "acad-03",
+      "target": "kw-educacion",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e044",
+      "source": "acad-03",
+      "target": "kw-saludmental",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e045",
+      "source": "acad-03",
+      "target": "kw-analitica",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e046",
+      "source": "acad-04",
+      "target": "kw-optimizacion",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e047",
+      "source": "acad-04",
+      "target": "kw-movilidad",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e048",
+      "source": "acad-04",
+      "target": "kw-gobdigital",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e049",
+      "source": "acad-04",
+      "target": "kw-territorio",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e050",
+      "source": "acad-05",
+      "target": "kw-comunidades",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e051",
+      "source": "acad-05",
+      "target": "kw-territorio",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e052",
+      "source": "acad-05",
+      "target": "kw-bienestar",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e053",
+      "source": "acad-06",
+      "target": "kw-saludmental",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e054",
+      "source": "acad-06",
+      "target": "kw-bienestar",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e055",
+      "source": "acad-06",
+      "target": "kw-infancia",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e056",
+      "source": "acad-07",
+      "target": "kw-educacion",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e057",
+      "source": "acad-07",
+      "target": "kw-infancia",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e058",
+      "source": "acad-07",
+      "target": "kw-migracion",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e059",
+      "source": "acad-08",
+      "target": "kw-migracion",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e060",
+      "source": "acad-08",
+      "target": "kw-territorio",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    },
+    {
+      "id": "e061",
+      "source": "acad-08",
+      "target": "kw-comunidades",
+      "tipo": "TIENE_PALABRA_CLAVE"
+    }
+  ]
+}
